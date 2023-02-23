@@ -1,0 +1,17 @@
+.DS_Store
+/node_modules
+package-lock.json
+.git-repos
+/dist
+/notes
+/temp
+/test/out
+/test/ply/results/actual
+.gitignore
+.gitattributes
+.prettierignore
+*.md
+*.log
+*.png
+*.txt
+

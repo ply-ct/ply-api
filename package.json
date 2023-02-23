@@ -1,0 +1,44 @@
+{
+  "name": "@ply-ct/ply-api",
+  "version": "0.1.0",
+  "description": "Ply API",
+  "main": "dist/main.js",
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ply-ct/ply-api.git"
+  },
+  "scripts": {
+    "build": "npm run ver && npm run ply-ver && tsc && tsc --project test",
+    "ver": "PKG_VER=$(jq -r .version ./package.json) && echo export const apiVersion = \\'$PKG_VER\\'\\; > src/versions.ts",
+    "ply-ver": "PLY_VER=$(jq -r .version ./node_modules/@ply-ct/ply/package.json) && echo export const plyVersion = \\'$PLY_VER\\'\\; >> src/versions.ts",
+    "lint": "eslint src --max-warnings 5 && prettier --check ./",
+    "pretest": "npm run lint && npm run build",
+    "mocha": "cross-env TS_NODE_PREFER_TS_EXTS=true mocha --require ts-node/register test/**/*.test.ts",
+    "test": "npm run mocha"
+  },
+  "dependencies": {
+    "@ply-ct/ply": "^3.0.56",
+    "cross-fetch": "^3.1.5",
+    "flowbee": "^0.4.16",
+    "http-status-codes": "^2.2.0",
+    "js-yaml": "^4.1.0",
+    "minimatch": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.4",
+    "@types/js-yaml": "^4.0.5",
+    "@types/minimatch": "^5.1.2",
+    "@types/mocha": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "^5.51.0",
+    "@typescript-eslint/parser": "^5.51.0",
+    "chai": "^4.3.7",
+    "eslint": "^8.34.0",
+    "mocha": "^10.2.0",
+    "prettier": "^2.8.4",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.5"
+  }
+}
