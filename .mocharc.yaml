@@ -3,4 +3,4 @@ extension:
 spec: test/**/*.test.ts
 require:
   - 'ts-node/register'
-timeout: 5000
+timeout: 15000 # cloning

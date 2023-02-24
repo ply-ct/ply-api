@@ -23,7 +23,7 @@ export interface GitHubConfig {
      */
     token?: string;
     user?: string;
-    repoDir?: string;
+    reposDir?: string;
     verbose?: boolean;
 }
 
@@ -60,8 +60,8 @@ export class GitHubAccess implements FileAccess {
      * If defined, indicates git local clone
      */
     get repoDir(): string | undefined {
-        if (this.config.repoDir) {
-            return `${this.config.repoDir}/${this.repository.name}`;
+        if (this.config.reposDir) {
+            return `${this.config.reposDir}/${this.repository.name}`;
         }
     }
 

@@ -1,4 +1,3 @@
-import { relative } from 'path';
 import * as ply from '@ply-ct/ply';
 import * as flowbee from 'flowbee';
 import * as jsYaml from 'js-yaml';
@@ -17,11 +16,15 @@ import { GitHubAccess } from './github';
 import { fixPath } from '../util/files';
 import { loadContent } from '../util/content';
 
+export interface PlyDataOptions {
+    plyBase?: string;
+}
+
 // TODO: skipped
 export class PlyData {
     private files: FileSystemData;
 
-    constructor(readonly config: ApiConfig) {
+    constructor(readonly config: ApiConfig, readonly options?: PlyDataOptions) {
         this.files = new FileSystemData(config);
     }
 
@@ -61,18 +64,27 @@ export class PlyData {
     private plyBase?: string;
     async getPlyBase(): Promise<string> {
         if (this.plyBase === undefined) {
-            const plyOptions = await this.getPlyOptions();
-            if (plyOptions) {
-                this.plyBase = plyOptions.testsLocation || '.';
+            if (this.options?.plyBase) {
+                this.plyBase = this.options.plyBase;
+                if (this.config.github.reposDir) {
+                    const repoName = GitHubAccess.getRepositoryName(this.config.github.url);
+                    this.plyBase = `${this.config.github.reposDir}/${repoName}/${this.plyBase}`;
+                }
             } else {
-                this.plyBase = '.';
+                const plyOptions = await this.getPlyOptions();
+                if (plyOptions) {
+                    this.plyBase = plyOptions.testsLocation || '.';
+                } else {
+                    this.plyBase = '.';
+                }
+                if (this.config.dir) {
+                    this.plyBase = fixPath(this.plyBase!, this.config.dir);
+                } else if (this.config.github.reposDir) {
+                    const repoName = GitHubAccess.getRepositoryName(this.config.github.url);
+                    this.plyBase = `${this.config.github.reposDir}/${repoName}/${this.plyBase}`;
+                }
             }
-            if (this.config.dir) {
-                this.plyBase = fixPath(this.plyBase!, this.config.dir);
-            } else if (this.config.github.repoDir) {
-                const repoName = GitHubAccess.getRepositoryName(this.config.github.url);
-                this.plyBase = `${this.config.github.repoDir}/${repoName}/${this.plyBase}`;
-            }
+
             this.config.logger?.log(`Finding ply tests from ${this.plyBase}`);
         }
         return this.plyBase!;
@@ -178,6 +190,11 @@ export class PlyData {
                 recursive: true,
                 patterns: ['**/*.ply.ts']
             });
+            if (!caseFiles) return [];
+
+            if (!this.config.dir && !this.config.github.reposDir) {
+                throw new Error('Loading ply cases requires local source code');
+            }
 
             const options = await this.getPlyOptions();
             const loadedSuites = await new ply.Ply(options).loadCases(caseFiles);
