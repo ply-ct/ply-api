@@ -97,16 +97,17 @@ export class GitHubAccess implements FileAccess {
         this.repository.lastCommit = new Date(repoBranch.commit.commit.committer.date);
     }
 
-    async listFiles(dirPath: string, options?: FileListOptions): Promise<string[]> {
+    async listFiles(relPath: string, options?: FileListOptions): Promise<string[]> {
         if (this.repoDir) {
             await this.cloneOrPull(this.repoDir);
-            return await new FileSystemAccess().listFiles(dirPath, options);
+            return await new FileSystemAccess(this.repoDir).listFiles(relPath, options);
         } else {
+            // TODO: one request? paginated?
             const filePaths: string[] = [];
             try {
-                const items = await this.doGet(`contents/${dirPath}`);
+                const items = await this.doGet(`contents/${relPath}`);
                 if (!Array.isArray(items)) {
-                    throw new Error(`Expected 'array' instead of '${typeof items}': ${dirPath}`);
+                    throw new Error(`Expected 'array' instead of '${typeof items}': ${relPath}`);
                 }
                 for (const item of items) {
                     if (item.type === 'file') {
@@ -126,13 +127,13 @@ export class GitHubAccess implements FileAccess {
         }
     }
 
-    async getFileList(dirPath: string, options?: FileListOptions): Promise<FileList> {
+    async getFileList(relPath: string, options?: FileListOptions): Promise<FileList> {
         if (this.repoDir) {
             await this.cloneOrPull(this.repoDir);
-            return await new FileSystemAccess().getFileList(dirPath, options);
+            return await new FileSystemAccess(this.repoDir).getFileList(relPath, options);
         } else {
             const fileList: FileList = {};
-            const filePaths = await this.listFiles(dirPath, options);
+            const filePaths = await this.listFiles(relPath, options);
             for (const filePath of filePaths) {
                 fileList[filePath] = await this.getTextFileContent(filePath);
             }
@@ -140,37 +141,37 @@ export class GitHubAccess implements FileAccess {
         }
     }
 
-    async readTextFile(filePath: string): Promise<string | undefined> {
+    async readTextFile(relPath: string): Promise<string | undefined> {
         if (this.repoDir) {
             await this.cloneOrPull(this.repoDir);
-            const file = `${this.repoDir}/${filePath}`;
+            const file = `${this.repoDir}/${relPath}`;
             if (existsSync(file)) {
                 return await fs.readFile(file, { encoding: 'utf8' });
             }
         } else {
             try {
-                return await this.getTextFileContent(filePath);
+                return await this.getTextFileContent(relPath);
             } catch (err: any) {
                 if (err.status !== 404) throw err;
             }
         }
     }
 
-    async getTextFileContent(filePath: string): Promise<string> {
+    async getTextFileContent(relPath: string): Promise<string> {
         if (this.repoDir) {
             await this.cloneOrPull(this.repoDir);
-            return await fs.readFile(`${this.repoDir}/${filePath}`, { encoding: 'utf8' });
+            return await fs.readFile(`${this.repoDir}/${relPath}`, { encoding: 'utf8' });
         } else {
-            const file = await this.doGet(`contents/${filePath}`);
+            const file = await this.doGet(`contents/${relPath}`);
             if (typeof file !== 'object') {
-                throw new Error(`Expected 'object' instead of '${typeof file}': ${filePath}`);
+                throw new Error(`Expected 'object' instead of '${typeof file}': ${relPath}`);
             }
             if (file.type !== 'file') {
-                throw new Error(`Unexpected response type '${file.type}': ${filePath}`);
+                throw new Error(`Unexpected response type '${file.type}': ${relPath}`);
             }
 
             if (file.encoding === 'none') {
-                console.error(`Cannot download large file: ${filePath}`);
+                console.error(`Cannot download large file: ${relPath}`);
                 return '';
             }
 

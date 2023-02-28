@@ -1,7 +1,20 @@
 import * as flowbee from 'flowbee';
 import { Status } from './api';
 
+export interface PlyTests {
+    requests: PlyRequestSuite[];
+    flows: PlyFlow[];
+    cases: PlyCaseSuite[];
+}
+
 export interface PlyRequestSuite {
+    /**
+     * Path relative to plyBase
+     */
+    name: string;
+    /**
+     * Path relative to project
+     */
     path: string;
     requests: PlyRequest[];
 }
@@ -15,6 +28,13 @@ export interface PlyRequest {
 }
 
 export interface PlyFlow {
+    /**
+     * Path relative to plyBase
+     */
+    name: string;
+    /**
+     * Path relative to project
+     */
     path: string;
     steps: PlyStep[];
 }
@@ -26,6 +46,13 @@ export interface PlyStep {
 }
 
 export interface PlyCaseSuite {
+    /**
+     * Path relative to plyBase
+     */
+    name: string;
+    /**
+     * Path relative to project
+     */
     path: string;
     class: string;
     cases: PlyCase[];

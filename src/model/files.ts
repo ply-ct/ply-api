@@ -13,19 +13,22 @@ export interface FileList {
     [path: string]: string;
 }
 
+/**
+ * Handles relative-pathed file access for
+ */
 export interface FileAccess {
     /**
-     * Returns matching file paths under dirPath. Empty if dirPath does not exist.
+     * Returns matching file paths under dirPath. Empty if relPath does not exist.
      */
-    listFiles(dirPath: string, options?: FileListOptions): Promise<string[]>;
+    listFiles(relPath: string, options?: FileListOptions): Promise<string[]>;
 
     /**
-     * Maps file path to file contents. Empty object if dirPath does not exist.
+     * Maps file path to file contents. Empty object if relPath does not exist.
      */
-    getFileList(dirPath: string, options?: FileListOptions): Promise<FileList>;
+    getFileList(relPath: string, options?: FileListOptions): Promise<FileList>;
 
     /**
      * Read file content, or undefined if file does not exist.
      */
-    readTextFile(filePath: string): Promise<string | undefined>;
+    readTextFile(relPath: string): Promise<string | undefined>;
 }

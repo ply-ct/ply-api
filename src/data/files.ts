@@ -10,7 +10,7 @@ export class FileSystemData {
     async getFileAccess(): Promise<FileAccess> {
         if (!this.fileAccess) {
             if (this.config.dir) {
-                this.fileAccess = new FileSystemAccess();
+                this.fileAccess = new FileSystemAccess(this.config.dir);
             } else {
                 const githubAccess = new GitHubAccess(this.config.github);
                 await githubAccess.init();

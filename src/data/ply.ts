@@ -1,59 +1,70 @@
+import { relative } from 'path';
 import * as ply from '@ply-ct/ply';
 import * as flowbee from 'flowbee';
 import * as jsYaml from 'js-yaml';
-import { ApiConfig } from '../model/api';
-import { FileList } from '../model/files';
+import { FileAccess, FileList } from '../model/files';
 import {
     PlyRequestSuite,
     PlyExpectedResult,
     PlyRequest,
     PlyFlow,
     PlyStep,
-    PlyCaseSuite
+    PlyCaseSuite,
+    PlyTests
 } from '../model/ply';
-import { FileSystemData } from './files';
-import { GitHubAccess } from './github';
-import { fixPath } from '../util/files';
 import { loadContent } from '../util/content';
+import { ApiLogger } from '../model/api';
 
 export interface PlyDataOptions {
+    /**
+     * File system directory
+     */
+    dir?: string;
+    /**
+     * Git repository location
+     */
+    repoPath?: string;
+    /**
+     * Ply config location
+     */
+    plyConfig?: string;
+    /**
+     * Ply tests location
+     */
     plyBase?: string;
+    /**
+     * Logger
+     */
+    logger?: ApiLogger;
 }
 
 // TODO: skipped
 export class PlyData {
-    private files: FileSystemData;
+    readonly options: PlyDataOptions;
 
-    constructor(readonly config: ApiConfig, readonly options?: PlyDataOptions) {
-        this.files = new FileSystemData(config);
+    constructor(readonly files: FileAccess, options?: PlyDataOptions) {
+        this.options = options || {};
     }
 
     private plyOptions?: ply.PlyOptions;
     async getPlyOptions(): Promise<ply.PlyOptions> {
         if (!this.plyOptions) {
             this.plyOptions = new ply.Defaults();
-            const fileAccess = await this.files.getFileAccess();
             let plyConfigFile: string | undefined;
             let plyConfigContents: string | undefined;
-            if (this.config.plyConfig) {
-                plyConfigFile = this.config.dir
-                    ? fixPath(this.config.plyConfig, this.config.dir)
-                    : this.config.plyConfig;
-                plyConfigContents = await fileAccess.readTextFile(plyConfigFile);
+            if (this.options.plyConfig) {
+                plyConfigFile = this.options.plyConfig;
+                plyConfigContents = await this.files.readTextFile(plyConfigFile);
             } else {
-                plyConfigFile = this.config.dir
-                    ? fixPath('plyconfig.yaml', this.config.dir)
-                    : 'plyconfig.yaml';
-                plyConfigContents = await fileAccess.readTextFile(plyConfigFile);
+                plyConfigFile = 'plyconfig.yaml';
+                plyConfigContents = await this.files.readTextFile(plyConfigFile);
                 if (!plyConfigContents) {
-                    plyConfigFile = this.config.dir
-                        ? fixPath('plyconfig.json', this.config.dir)
-                        : 'plyconfig.json';
-                    plyConfigContents = await fileAccess.readTextFile(plyConfigFile);
+                    plyConfigFile = 'plyconfig.json';
+                    plyConfigContents = await this.files.readTextFile(plyConfigFile);
                 }
             }
             if (plyConfigContents) {
-                this.config.logger?.log(`Loading ply config from: ${plyConfigFile}`);
+                this.options.logger?.log(`Loading ply config from: ${plyConfigFile}`);
                 const plyConfig = loadContent(plyConfigContents, plyConfigFile) as ply.Options;
                 this.plyOptions = { ...this.plyOptions, ...plyConfig };
             }
@@ -66,28 +77,23 @@ export class PlyData {
         if (this.plyBase === undefined) {
             if (this.options?.plyBase) {
                 this.plyBase = this.options.plyBase;
-                if (this.config.github.reposDir) {
-                    const repoName = GitHubAccess.getRepositoryName(this.config.github.url);
-                    this.plyBase = `${this.config.github.reposDir}/${repoName}/${this.plyBase}`;
-                }
             } else {
                 const plyOptions = await this.getPlyOptions();
-                if (plyOptions) {
-                    this.plyBase = plyOptions.testsLocation || '.';
-                } else {
-                    this.plyBase = '.';
-                }
-                if (this.config.dir) {
-                    this.plyBase = fixPath(this.plyBase!, this.config.dir);
-                } else if (this.config.github.reposDir) {
-                    const repoName = GitHubAccess.getRepositoryName(this.config.github.url);
-                    this.plyBase = `${this.config.github.reposDir}/${repoName}/${this.plyBase}`;
-                }
+                this.plyBase = plyOptions.testsLocation || '.';
             }
 
-            this.config.logger?.log(`Finding ply tests from ${this.plyBase}`);
+            this.options.logger?.log(`Finding ply tests from ${this.plyBase}`);
         }
-        return this.plyBase!;
+        return this.plyBase;
+    }
+
+    public async getPlyTests(): Promise<PlyTests> {
+        // load serially to avoid overlapping github commands
+        return {
+            requests: await this.getPlyRequests(),
+            flows: await this.getPlyFlows(),
+            cases: await this.getPlyCases()
+        };
     }
 
     private plyRequests?: PlyRequestSuite[];
@@ -105,8 +111,7 @@ export class PlyData {
         const requestSuites: PlyRequestSuite[] = [];
         const plyBase = await this.getPlyBase();
         if (plyBase) {
-            const fileAccess = await this.files.getFileAccess();
-            const requestFiles = await fileAccess.getFileList(plyBase, {
+            const requestFiles = await this.files.getFileList(plyBase, {
                 recursive: true,
                 patterns: ['**/*.ply.yaml', '**/*.ply']
             });
@@ -115,10 +120,12 @@ export class PlyData {
                 const requestsObj = jsYaml.load(contents, { filename: path }) as {
                     [name: string]: PlyRequest;
                 };
-                const requests = Object.keys(requestsObj).map((name) => {
-                    return { ...requestsObj[name], name };
-                });
-                requestSuites.push({ path, requests });
+                if (requestsObj) {
+                    const requests = Object.keys(requestsObj).map((name) => {
+                        return { ...requestsObj[name], name };
+                    });
+                    requestSuites.push({ name: relative(plyBase, path), path, requests });
+                }
             }
         }
         return requestSuites;
@@ -138,34 +145,35 @@ export class PlyData {
         const flows: PlyFlow[] = [];
         const plyBase = await this.getPlyBase();
         if (plyBase) {
-            const fileAccess = await this.files.getFileAccess();
-            const flowFiles = await fileAccess.getFileList(plyBase, {
+            const flowFiles = await this.files.getFileList(plyBase, {
                 recursive: true,
                 patterns: ['**/*.ply.flow']
             });
             for (const path of Object.keys(flowFiles)) {
                 const contents = flowFiles[path];
                 const flow = jsYaml.load(contents, { filename: path }) as flowbee.Flow;
-                const steps: PlyStep[] = [];
-                if (flow.steps) {
-                    for (const step of flow.steps) {
-                        steps.push({ name: step.name.replace(/\r?\n/g, ' '), step });
+                if (flow) {
+                    const steps: PlyStep[] = [];
+                    if (flow.steps) {
+                        for (const step of flow.steps) {
+                            steps.push({ name: step.name.replace(/\r?\n/g, ' '), step });
+                        }
                     }
-                }
-                if (flow.subflows) {
-                    for (const subflow of flow.subflows) {
-                        if (subflow.steps) {
-                            for (const step of subflow.steps) {
-                                steps.push({
-                                    name: step.name.replace(/\r?\n/g, ' '),
-                                    step,
-                                    subflow
-                                });
+                    if (flow.subflows) {
+                        for (const subflow of flow.subflows) {
+                            if (subflow.steps) {
+                                for (const step of subflow.steps) {
+                                    steps.push({
+                                        name: step.name.replace(/\r?\n/g, ' '),
+                                        step,
+                                        subflow
+                                    });
+                                }
                             }
                         }
                     }
+                    flows.push({ name: relative(plyBase, path), path, steps });
                 }
-                flows.push({ path, steps } as any);
             }
         }
         return flows;
@@ -185,22 +193,27 @@ export class PlyData {
         const caseSuites: PlyCaseSuite[] = [];
         const plyBase = await this.getPlyBase();
         if (plyBase) {
-            const fileAccess = await this.files.getFileAccess();
-            const caseFiles = await fileAccess.listFiles(plyBase, {
+            const caseFiles = await this.files.listFiles(plyBase, {
                 recursive: true,
                 patterns: ['**/*.ply.ts']
             });
             if (!caseFiles) return [];
 
-            if (!this.config.dir && !this.config.github.reposDir) {
+            const baseDir = this.options.dir || this.options.repoPath;
+            if (!baseDir) {
                 throw new Error('Loading ply cases requires local source code');
             }
 
             const options = await this.getPlyOptions();
-            const loadedSuites = await new ply.Ply(options).loadCases(caseFiles);
+            const loadedSuites = await new ply.Ply(options).loadCases(
+                caseFiles.map((cf) => `${baseDir}/${cf}`)
+            );
             for (const loadedSuite of loadedSuites) {
+                const path =
+                    caseFiles.find((cf) => loadedSuite.path.endsWith(cf)) || loadedSuite.path; // why?
                 const caseSuite: PlyCaseSuite = {
-                    path: caseFiles.find((cf) => loadedSuite.path.endsWith(cf)) || loadedSuite.path, // why?
+                    name: relative(plyBase, path),
+                    path,
                     class: loadedSuite.className!,
                     cases: []
                 };
@@ -228,16 +241,15 @@ export class PlyData {
         const plyExpectedResults: PlyExpectedResult[] = [];
         const plyBase = await this.getPlyBase();
         if (plyBase) {
-            const fileAccess = await this.files.getFileAccess();
             const expectedPath = `${plyBase}/results/expected`;
             let resultFiles: FileList = {};
             try {
-                resultFiles = await fileAccess.getFileList(expectedPath, {
+                resultFiles = await this.files.getFileList(expectedPath, {
                     patterns: ['**/*.yaml'],
                     recursive: true
                 });
             } catch (err: unknown) {
-                this.config.logger?.error(`API file access error: ${err}`);
+                this.options.logger?.error(`API file access error: ${err}`);
                 console.error(err);
             }
             for (const path of Object.keys(resultFiles)) {
@@ -247,12 +259,14 @@ export class PlyData {
                     const expectedResults = jsYaml.load(contents, { filename: path }) as {
                         [name: string]: PlyExpectedResult;
                     };
-                    for (const name of Object.keys(expectedResults)) {
-                        const result = expectedResults[name];
-                        if (result.request && result.response) {
-                            result.file = path;
-                            result.name = name;
-                            plyExpectedResults.push(result);
+                    if (expectedResults) {
+                        for (const name of Object.keys(expectedResults)) {
+                            const result = expectedResults[name];
+                            if (result.request && result.response) {
+                                result.file = path;
+                                result.name = name;
+                                plyExpectedResults.push(result);
+                            }
                         }
                     }
                 }
