@@ -1,5 +1,6 @@
 import * as flowbee from 'flowbee';
-import { Status } from './api';
+import { PlyRequest, PlyResponse } from './request';
+import { RunResult } from './result';
 
 export interface PlySuite {
     /**
@@ -13,7 +14,8 @@ export interface PlySuite {
     source?: string;
 }
 
-export interface PlyTests {
+export interface PlyTestSuites {
+    plyBase: string;
     requests: PlyRequestSuite[];
     flows: PlyFlow[];
     cases: PlyCaseSuite[];
@@ -21,14 +23,6 @@ export interface PlyTests {
 
 export interface PlyRequestSuite extends PlySuite {
     requests: PlyRequest[];
-}
-
-export interface PlyRequest {
-    name: string;
-    url: string;
-    method: string;
-    headers: { [key: string]: string };
-    body?: string;
 }
 
 export interface PlyFlow extends PlySuite {
@@ -52,13 +46,6 @@ export interface PlyCase {
     method: string;
 }
 
-export interface RunResult {
-    status: ResultStatus;
-    message?: string;
-}
-
-export type ResultStatus = 'Pending' | 'Passed' | 'Failed' | 'Errored' | 'Submitted';
-
 export interface SuiteRun {
     suite: string;
     run: number;
@@ -77,14 +64,8 @@ export interface TestRun {
     start?: Date;
     end?: Date;
     result: RunResult;
-    request?: Request;
-    response?: Response;
-}
-
-export interface PlyResponse {
-    status: Status;
-    headers: { [key: string]: string };
-    body?: any;
+    request?: PlyRequest;
+    response?: PlyResponse;
 }
 
 export interface PlyExpectedResult {

@@ -1,31 +1,12 @@
 import { existsSync, promises as fs } from 'fs';
 import fetch from 'cross-fetch';
-import { Repository } from '../model/github';
+import { Repository, GitHubConfig } from '../model/github';
 import { FileListOptions, FileList, FileAccess } from '../model/files';
 import { Exec } from '../util/exec';
 import { FileSystemAccess } from '../util/files';
-import { StatusError } from '../model/api';
+import { StatusError } from '../model/request';
 import { apiVersion } from '../versions';
 import { isMatch } from '../util/match';
-
-export interface GitHubConfig {
-    /**
-     * GitHub web url
-     * (eg: https://github.com/ply-ct/ply-demo)
-     */
-    url: string;
-    /**
-     * If not specified, use default branch
-     */
-    branch?: string;
-    /**
-     * Needed for non-public apis
-     */
-    token?: string;
-    user?: string;
-    reposDir?: string;
-    verbose?: boolean;
-}
 
 // TODO shallow clone
 export class GitHubAccess implements FileAccess {

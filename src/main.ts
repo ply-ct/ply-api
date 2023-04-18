@@ -1,7 +1,9 @@
 export * from './model/api';
+export * from './model/event';
 export * from './model/github';
-export * from './model/ply';
+export * from './model/request';
+export * from './model/result';
+export * from './model/test';
 export * from './data/ply';
 export * from './versions';
-// re-export ply openapi
-export { openapi } from '@ply-ct/ply';
+export * as openapi from './model/openapi';

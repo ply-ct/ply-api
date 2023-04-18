@@ -3,16 +3,16 @@ import * as ply from '@ply-ct/ply';
 import * as flowbee from 'flowbee';
 import * as jsYaml from 'js-yaml';
 import { FileAccess, FileList } from '../model/files';
+import { PlyRequest } from '../model/request';
 import {
     PlyRequestSuite,
     PlyExpectedResult,
-    PlyRequest,
     PlyFlow,
     PlyStep,
     PlyCaseSuite,
-    PlyTests,
+    PlyTestSuites,
     PlySubflow
-} from '../model/ply';
+} from '../model/test';
 import { loadContent } from '../util/content';
 import { ApiLogger } from '../model/api';
 
@@ -92,9 +92,10 @@ export class PlyData {
         return this.plyBase;
     }
 
-    public async getPlyTests(): Promise<PlyTests> {
+    public async getPlySuites(): Promise<PlyTestSuites> {
         // load serially to avoid overlapping github commands
         return {
+            plyBase: await this.getPlyBase(),
             requests: await this.getPlyRequests(),
             flows: await this.getPlyFlows(),
             cases: await this.getPlyCases()

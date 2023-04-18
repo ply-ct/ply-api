@@ -1,3 +1,22 @@
+export interface GitHubConfig {
+    /**
+     * GitHub web url
+     * (eg: https://github.com/ply-ct/ply-demo)
+     */
+    url: string;
+    /**
+     * If not specified, use default branch
+     */
+    branch?: string;
+    /**
+     * Needed for non-public apis
+     */
+    token?: string;
+    user?: string;
+    reposDir?: string;
+    verbose?: boolean;
+}
+
 export interface Repository {
     url: string;
     owner: string;
