@@ -1,4 +1,3 @@
-import * as flowbee from 'flowbee';
 import { PlyRequest, PlyResponse } from './request';
 import { RunResult } from './result';
 
@@ -30,10 +29,34 @@ export interface PlyFlow extends PlySuite {
     subflows?: PlySubflow[];
 }
 
-export interface PlyStep extends flowbee.Step {}
+export interface PlyStep {
+    id: string;
+    name: string;
+    /**
+     * Logical path for descriptor, or for custom steps
+     * this is the module path to ts file.
+     */
+    path: string;
+    attributes?: { [key: string]: string };
+    type: 'step';
+    links?: PlyLink[];
+}
 
-export interface PlySubflow extends flowbee.Subflow {
+export interface PlyLink {
+    id: string;
+    to: string;
+    attributes?: { [key: string]: string };
+    type: 'link';
+    event?: 'Finish' | 'Error' | 'Cancel' | 'Delay' | 'Resume';
+    result?: string;
+}
+
+export interface PlySubflow {
+    id: string;
+    name: string;
     steps?: PlyStep[];
+    attributes?: { [key: string]: string };
+    type: 'subflow';
 }
 
 export interface PlyCaseSuite extends PlySuite {

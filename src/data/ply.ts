@@ -1,6 +1,5 @@
 import { relative } from 'path';
 import * as ply from '@ply-ct/ply';
-import * as flowbee from 'flowbee';
 import * as jsYaml from 'js-yaml';
 import { FileAccess, FileList } from '../model/files';
 import { PlyRequest } from '../model/request';
@@ -188,7 +187,7 @@ export class PlyData {
 
     private async readPlyFlow(path: string, contents: string): Promise<PlyFlow> {
         const plyBase = await this.getPlyBase();
-        const flow = jsYaml.load(contents, { filename: path }) as flowbee.Flow;
+        const flow = jsYaml.load(contents, { filename: path }) as PlyFlow;
         if (!flow) {
             throw new Error(`Bad ply flow: ${plyBase}/${path}`);
         }
@@ -222,7 +221,7 @@ export class PlyData {
             return sub1.id.localeCompare(sub2.id);
         });
 
-        const addSteps = (flow: PlyFlow | PlySubflow, start: flowbee.Step, steps: PlyStep[]) => {
+        const addSteps = (flow: PlyFlow | PlySubflow, start: PlyStep, steps: PlyStep[]) => {
             if (flow.steps && !steps.find((step) => step.id === start.id)) {
                 steps.push(start);
                 if (start.links) {
