@@ -1,6 +1,5 @@
 import { relative } from 'path';
 import * as ply from '@ply-ct/ply';
-import * as jsYaml from 'js-yaml';
 import { FileAccess, FileList } from '../model/files';
 import { PlyRequest } from '../model/request';
 import {
@@ -14,6 +13,7 @@ import {
 } from '../model/test';
 import { loadContent } from '../util/content';
 import { ApiLogger } from '../model/api';
+import * as yaml from '../util/yaml';
 
 export interface PlyDataOptions {
     /**
@@ -137,7 +137,7 @@ export class PlyData {
 
     private async readRequestSuite(path: string, contents: string): Promise<PlyRequestSuite> {
         const plyBase = await this.getPlyBase();
-        const requestsObj = jsYaml.load(contents, { filename: path }) as {
+        const requestsObj = yaml.load(path, contents, true) as {
             [name: string]: PlyRequest;
         };
         if (!requestsObj) {
@@ -187,7 +187,7 @@ export class PlyData {
 
     private async readPlyFlow(path: string, contents: string): Promise<PlyFlow> {
         const plyBase = await this.getPlyBase();
-        const flow = jsYaml.load(contents, { filename: path }) as PlyFlow;
+        const flow = yaml.load(path, contents) as PlyFlow;
         if (!flow) {
             throw new Error(`Bad ply flow: ${plyBase}/${path}`);
         }
@@ -358,7 +358,7 @@ export class PlyData {
                 const contents = resultFiles[path];
                 // empty contents can happen for large, undownloadable files
                 if (contents) {
-                    const expectedResults = jsYaml.load(contents, { filename: path }) as {
+                    const expectedResults = yaml.load(path, contents) as {
                         [name: string]: PlyExpectedResult;
                     };
                     if (expectedResults) {
