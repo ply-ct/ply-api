@@ -8,15 +8,15 @@ export interface PlyRequest {
     body?: string;
 }
 
-export interface Status {
-    code: StatusCodes;
-    message: string;
-}
-
 export interface PlyResponse {
     status: Status;
     headers: { [key: string]: string };
     body?: any;
+}
+
+export interface Status {
+    code: StatusCodes;
+    message: string;
 }
 
 /**

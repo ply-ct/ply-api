@@ -1,7 +1,7 @@
 import { promises as fs, existsSync as fileExists } from 'fs';
 import * as jsYaml from 'js-yaml';
 import fetch from 'cross-fetch';
-import { apiVersion } from '../versions';
+import { plyApiVersion } from '../versions';
 
 /**
  * Catches errors to provide a meaningful stack
@@ -48,7 +48,7 @@ export const retrieveFromUrl = async (url: string, token?: string): Promise<stri
         method: 'GET',
         headers: {
             ...(token && { Authorization: `Bearer ${token}` }),
-            'User-Agent': `ply-api ${apiVersion}`
+            'User-Agent': `ply-api ${plyApiVersion}`
         }
     });
 

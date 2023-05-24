@@ -1,3 +1,26 @@
+import { PlyRequest, PlyResponse } from './request';
+
+export interface ExpectedResults {
+    path: string;
+    contents: string;
+}
+
+export interface ActualResults {
+    path: string;
+    contents: string;
+}
+
+export interface ApiExpectedResult {
+    path: string;
+    name: string;
+    request: PlyRequest;
+    response: PlyResponse;
+}
+
+export interface ApiExpectedResults {
+    [name: string]: ApiExpectedResult;
+}
+
 export type ResultStatus = 'Pending' | 'Running' | 'Passed' | 'Failed' | 'Errored' | 'Submitted';
 
 export interface Outcome {

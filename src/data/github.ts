@@ -5,7 +5,7 @@ import { FileListOptions, FileList, FileAccess } from '../model/files';
 import { Exec } from '../util/exec';
 import { FileSystemAccess } from '../util/files';
 import { StatusError } from '../model/request';
-import { apiVersion } from '../versions';
+import { plyApiVersion } from '../versions';
 import { isMatch } from '../util/match';
 
 // TODO shallow clone
@@ -175,7 +175,7 @@ export class GitHubAccess implements FileAccess {
             method: 'GET',
             headers: {
                 ...(this.config.token && { Authorization: `Bearer ${this.config.token}` }),
-                'User-Agent': `ply-api ${apiVersion}`
+                'User-Agent': `ply-api ${plyApiVersion}`
             }
         });
         if (response.ok) {
@@ -198,7 +198,7 @@ export class GitHubAccess implements FileAccess {
             method: 'POST',
             headers: {
                 ...(this.config.token && { Authorization: `Bearer ${this.config.token}` }),
-                'User-Agent': `ply-api ${apiVersion}`,
+                'User-Agent': `ply-api ${plyApiVersion}`,
                 'Content-Type': 'application/graphql'
             },
             body: JSON.stringify({ query })

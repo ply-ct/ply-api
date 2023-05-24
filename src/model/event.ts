@@ -1,6 +1,6 @@
-// Browser may require https://www.npmjs.com/package/events
 import { Outcome } from './result';
 import { TestType } from './test';
+import { FlowInstance, StepInstance, SubflowInstance } from './flow';
 
 /**
  * Event for 'start' listeners.
@@ -26,3 +26,14 @@ export interface SuiteEvent extends PlyEvent {
 }
 
 export type PlyEventListener = (e: PlyEvent) => void;
+
+export type FlowEventType = 'start' | 'exec' | 'finish' | 'error';
+export type FlowElementType = 'flow' | 'step' | 'link' | 'subflow' | 'note';
+
+export interface FlowEvent {
+    eventType: FlowEventType;
+    elementType: FlowElementType;
+    flowPath: string;
+    flowInstanceId: string;
+    instance: FlowInstance | SubflowInstance | StepInstance;
+}
