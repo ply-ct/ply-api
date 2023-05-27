@@ -12,4 +12,5 @@
       "label": "npm: build",
       "detail": "tsc"
     }
+  ]
 }
