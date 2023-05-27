@@ -34,25 +34,6 @@ describe('ply', () => {
         expect(createMovie.requests[0].body).to.be.not.undefined;
     });
 
-    /**
-     * must have been cloned already
-     */
-    it('loads ply flows from dir', async () => {
-        const fileData = new FileSystemData({ ...apiConfig, dir: '.git-repos/ply-demo' });
-        const plyData = new PlyData(await fileData.getFileAccess(), { dir: '.git-repos/ply-demo' });
-
-        const plyBase = await plyData.getPlyBase();
-        expect(plyBase).to.be.equal('test');
-
-        const plyFlows = await plyData.getPlyFlows();
-        const getMoviesFlow = plyFlows.find((f) => f.name === 'flows/get-movies.ply.flow');
-        assert.ok(getMoviesFlow);
-        expect(getMoviesFlow.path).to.be.equal('test/flows/get-movies.ply.flow');
-        assert.ok(getMoviesFlow.steps);
-        expect(getMoviesFlow.steps[0].name).to.be.equal('Start');
-        expect(getMoviesFlow.steps[0].path).to.be.equal('start');
-    });
-
     it('loads request suite from cloned', async () => {
         const reposDir = '.git-repos';
         const fileData = new FileSystemData({
@@ -73,6 +54,25 @@ describe('ply', () => {
         expect(requestSuite.name).to.be.equal('requests/movie-queries.ply.yaml');
         expect(requestSuite.path).to.be.equal(suitePath);
         expect(requestSuite.requests.length).to.be.equal(5);
+    });
+
+    /**
+     * must have been cloned already (see above)
+     */
+    it('loads ply flows from dir', async () => {
+        const fileData = new FileSystemData({ ...apiConfig, dir: '.git-repos/ply-demo' });
+        const plyData = new PlyData(await fileData.getFileAccess(), { dir: '.git-repos/ply-demo' });
+
+        const plyBase = await plyData.getPlyBase();
+        expect(plyBase).to.be.equal('test');
+
+        const plyFlows = await plyData.getPlyFlows();
+        const getMoviesFlow = plyFlows.find((f) => f.name === 'flows/get-movies.ply.flow');
+        assert.ok(getMoviesFlow);
+        expect(getMoviesFlow.path).to.be.equal('test/flows/get-movies.ply.flow');
+        assert.ok(getMoviesFlow.steps);
+        expect(getMoviesFlow.steps[0].name).to.be.equal('Start');
+        expect(getMoviesFlow.steps[0].path).to.be.equal('start');
     });
 
     it('loads flow through github api', async () => {
