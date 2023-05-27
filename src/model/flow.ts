@@ -1,6 +1,7 @@
 import { Suite } from './test';
 
 export interface Flow extends Suite {
+    attributes?: { [key: string]: string };
     steps: Step[];
     subflows?: Subflow[];
 }

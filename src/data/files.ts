@@ -1,10 +1,10 @@
-import { ApiConfig } from '../model/api';
 import { FileAccess } from '../model/files';
+import { GitHubConfig } from '../model/github';
 import { FileSystemAccess } from '../util/files';
 import { GitHubAccess } from './github';
 
-export class FileSystemData {
-    constructor(readonly config: ApiConfig) {}
+export class FilesAccess {
+    constructor(readonly config: { dir?: string; github: GitHubConfig }) {}
 
     private fileAccess?: FileAccess;
     async getFileAccess(): Promise<FileAccess> {

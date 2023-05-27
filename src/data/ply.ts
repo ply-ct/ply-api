@@ -1,71 +1,31 @@
-import { relative } from 'path';
-import { PlyDefaults, PlyOptions } from '../model/options';
-import { FileAccess, FileList } from '../model/files';
-import { PlyRequest } from '../model/request';
+import { PlyDataOptions } from '../model/data';
+import { PlyOptions } from '../model/options';
+import { FileAccess } from '../model/files';
 import { RequestSuite, TestSuites } from '../model/test';
-import { Flow, Step, Subflow } from '../model/flow';
+import { Flow } from '../model/flow';
 import { ExpectedResults, ApiExpectedResult } from '../model/result';
-import { loadContent } from '../util/content';
-import { ApiLogger } from '../model/api';
-import * as yaml from '../util/yaml';
+import { OptionsLoader } from './ply-load/options';
+import { RequestLoader } from './ply-load/requests';
+import { FlowLoader } from './ply-load/flows';
+import { ExpectedResultsLoader } from './ply-load/expected';
 
-export interface PlyDataOptions {
-    /**
-     * File system directory
-     */
-    dir?: string;
-    /**
-     * Git repository location
-     */
-    repoPath?: string;
-    /**
-     * Ply config location
-     */
-    plyConfig?: string;
-    /**
-     * Ply tests location
-     */
-    plyBase?: string;
-    /**
-     * Include suite source
-     */
-    suiteSource?: boolean;
-    /**
-     * Logger
-     */
-    logger?: ApiLogger;
-}
-
-// TODO: skipped
-export class PlyData {
+export class PlyAccess {
     readonly options: PlyDataOptions;
+    private plyOptions?: PlyOptions;
 
     constructor(readonly files: FileAccess, options?: PlyDataOptions) {
         this.options = options || {};
+        this.plyOptions = this.options.plyOptions;
     }
 
-    private plyOptions?: PlyOptions;
+    /**
+     *
+     * @returns
+     */
     async getPlyOptions(): Promise<PlyOptions> {
         if (!this.plyOptions) {
-            this.plyOptions = new PlyDefaults();
-            let plyConfigFile: string | undefined;
-            let plyConfigContents: string | undefined;
-            if (this.options.plyConfig) {
-                plyConfigFile = this.options.plyConfig;
-                plyConfigContents = await this.files.readTextFile(plyConfigFile);
-            } else {
-                plyConfigFile = 'plyconfig.yaml';
-                plyConfigContents = await this.files.readTextFile(plyConfigFile);
-                if (!plyConfigContents) {
-                    plyConfigFile = 'plyconfig.json';
-                    plyConfigContents = await this.files.readTextFile(plyConfigFile);
-                }
-            }
-            if (plyConfigContents) {
-                this.options.logger?.log(`Loading ply config from: ${plyConfigFile}`);
-                const plyConfig = loadContent(plyConfigContents, plyConfigFile) as PlyOptions;
-                this.plyOptions = { ...this.plyOptions, ...plyConfig };
-            }
+            const optionsLoader = new OptionsLoader(this.files, this.options);
+            this.plyOptions = await optionsLoader.loadPlyOptions(this.options.plyConfig);
         }
         return this.plyOptions;
     }
@@ -95,158 +55,31 @@ export class PlyData {
     }
 
     public async getRequestSuite(path: string): Promise<RequestSuite | undefined> {
-        const contents = await this.files.readTextFile(path);
-        if (contents) {
-            return await this.readRequestSuite(path, contents);
-        }
+        const loader = new RequestLoader(this.files, this.options);
+        return await loader.loadRequestSuite(await this.getPlyBase(), path);
     }
 
     private plyRequests?: RequestSuite[];
     public async getPlyRequests(): Promise<RequestSuite[]> {
         if (!this.plyRequests) {
-            this.plyRequests = await this.loadPlyRequests();
+            const loader = new RequestLoader(this.files, this.options);
+            this.plyRequests = await loader.loadPlyRequests(await this.getPlyBase());
         }
         return this.plyRequests;
     }
 
-    /**
-     * Lightweight request loader.
-     */
-    private async loadPlyRequests(): Promise<RequestSuite[]> {
-        const requestSuites: RequestSuite[] = [];
-        const requestFiles = await this.files.getFileList(await this.getPlyBase(), {
-            recursive: true,
-            patterns: ['**/*.ply.yaml', '**/*.ply.yml', '**/*.ply']
-        });
-        for (const path of Object.keys(requestFiles)) {
-            try {
-                requestSuites.push(await this.readRequestSuite(path, requestFiles[path]));
-            } catch (err: unknown) {
-                this.options.logger?.error(`${err}`, err);
-            }
-        }
-        return requestSuites;
-    }
-
-    private async readRequestSuite(path: string, contents: string): Promise<RequestSuite> {
-        const plyBase = await this.getPlyBase();
-        const requestsObj = yaml.load(path, contents, true) as {
-            [name: string]: PlyRequest;
-        };
-        if (!requestsObj) {
-            throw new Error(`Bad ply request: ${plyBase}/${path}`);
-        }
-        const requests = Object.keys(requestsObj).map((name) => {
-            return { ...requestsObj[name], name };
-        });
-        const requestSuite: RequestSuite = {
-            name: relative(plyBase, path),
-            path,
-            requests
-        };
-        if (this.options.suiteSource) requestSuite.source = contents;
-        return requestSuite;
-    }
-
     async getPlyFlow(path: string): Promise<Flow | undefined> {
-        const contents = await this.files.readTextFile(path);
-        if (contents) {
-            return await this.readPlyFlow(path, contents);
-        }
+        const loader = new FlowLoader(this.files, this.options);
+        return await loader.loadPlyFlow(await this.getPlyBase(), path);
     }
 
     private plyFlows?: Flow[];
     public async getPlyFlows(): Promise<Flow[]> {
         if (!this.plyFlows) {
-            this.plyFlows = await this.loadPlyFlows();
+            const loader = new FlowLoader(this.files, this.options);
+            this.plyFlows = await loader.loadPlyFlows(await this.getPlyBase());
         }
         return this.plyFlows;
-    }
-    /**
-     * Lightweight flow loader.
-     */
-    private async loadPlyFlows(): Promise<Flow[]> {
-        const plyFlows: Flow[] = [];
-        const plyBase = await this.getPlyBase();
-        const flowFiles = await this.files.getFileList(plyBase, {
-            recursive: true,
-            patterns: ['**/*.ply.flow']
-        });
-        for (const path of Object.keys(flowFiles)) {
-            try {
-                plyFlows.push(await this.readPlyFlow(path, flowFiles[path]));
-            } catch (err: unknown) {
-                this.options.logger?.error(`${err}`, err);
-            }
-        }
-        return plyFlows;
-    }
-
-    private async readPlyFlow(path: string, contents: string): Promise<Flow> {
-        const plyBase = await this.getPlyBase();
-        const flow = yaml.load(path, contents) as Flow;
-        if (!flow) {
-            throw new Error(`Bad ply flow: ${plyBase}/${path}`);
-        }
-        flow.steps?.forEach((step) => (step.name = step.name.replace(/\r?\n/g, ' ')));
-        const plyFlow: Flow = { name: relative(plyBase, path), path, steps: flow.steps || [] };
-        if (flow.subflows) {
-            const subflows: Subflow[] = flow.subflows;
-            subflows.forEach((subflow) => {
-                subflow.name = subflow.name.replace(/\r?\n/g, ' ');
-                subflow.steps?.forEach((s) => (s.name = s.name.replace(/\r?\n/g, ' ')));
-            });
-            plyFlow.subflows = subflows;
-        }
-        this.sortSubflowsAndSteps(plyFlow);
-        if (this.options.suiteSource) plyFlow.source = contents;
-        return plyFlow;
-    }
-
-    private sortSubflowsAndSteps(flow: Flow) {
-        flow.subflows?.sort((sub1, sub2) => {
-            if (sub1.attributes?.when === 'Before' && sub2.attributes?.when !== 'Before') {
-                return -1;
-            } else if (sub2.attributes?.when === 'Before' && sub1.attributes?.when !== 'Before') {
-                return 1;
-            }
-            if (sub1.attributes?.when === 'After' && sub2.attributes?.when !== 'After') {
-                return 1;
-            } else if (sub2.attributes?.when === 'After' && sub1.attributes?.when !== 'After') {
-                return -1;
-            }
-            return sub1.id.localeCompare(sub2.id);
-        });
-
-        const addSteps = (flow: Flow | Subflow, start: Step, steps: Step[]) => {
-            if (flow.steps && !steps.find((step) => step.id === start.id)) {
-                steps.push(start);
-                if (start.links) {
-                    for (const link of start.links) {
-                        const outStep = flow.steps.find((step) => step.id === link.to);
-                        if (outStep) {
-                            addSteps(flow, outStep, steps);
-                        }
-                    }
-                }
-            }
-        };
-
-        const flowStart = flow.steps.find((step) => step.path === 'start');
-        if (flowStart) {
-            const steps: Step[] = [];
-            addSteps(flow, flowStart, steps);
-            flow.steps = steps;
-        }
-
-        flow.subflows?.forEach((subflow) => {
-            const subStart = subflow.steps?.find((step) => step.path === 'start');
-            if (subStart) {
-                const steps: Step[] = [];
-                addSteps(subflow, subStart, steps);
-                subflow.steps = steps;
-            }
-        });
     }
 
     public async getExpectedResults(path: string): Promise<ExpectedResults | undefined> {
@@ -258,61 +91,13 @@ export class PlyData {
 
     private apiExpectedResults?: ApiExpectedResult[];
     /**
-     * Return expected results for requests and request steps
+     * Return expected results for requests and request steps only
      */
     public async getApiExpectedResults(): Promise<ApiExpectedResult[]> {
         if (!this.apiExpectedResults) {
-            this.apiExpectedResults = await this.loadApiExpectedResults();
+            const loader = new ExpectedResultsLoader(this.files, this.options);
+            this.apiExpectedResults = await loader.loadApiExpectedResults(await this.getPlyBase());
         }
         return this.apiExpectedResults;
-    }
-
-    private async loadApiExpectedResults(): Promise<ApiExpectedResult[]> {
-        const plyExpectedResults: ApiExpectedResult[] = [];
-        const plyBase = await this.getPlyBase();
-        if (plyBase) {
-            const expectedPath = `${plyBase}/results/expected`;
-            let resultFiles: FileList = {};
-            try {
-                resultFiles = await this.files.getFileList(expectedPath, {
-                    patterns: ['**/*.yaml'],
-                    recursive: true
-                });
-            } catch (err: unknown) {
-                this.options.logger?.error(`API file access error: ${err}`);
-                console.error(err);
-            }
-            for (const path of Object.keys(resultFiles)) {
-                const expectedResults = this.readApiExpectedResults(path, resultFiles[path]);
-                if (expectedResults) {
-                    plyExpectedResults.push(...expectedResults);
-                }
-            }
-        }
-        return plyExpectedResults;
-    }
-
-    private readApiExpectedResults(
-        path: string,
-        contents: string
-    ): ApiExpectedResult[] | undefined {
-        // empty contents can happen for large, undownloadable files
-        if (contents) {
-            const expectedResults = yaml.load(path, contents) as {
-                [name: string]: ApiExpectedResult;
-            };
-            if (expectedResults) {
-                const results: ApiExpectedResult[] = [];
-                for (const name of Object.keys(expectedResults)) {
-                    const result = expectedResults[name];
-                    if (result.request && result.response) {
-                        result.path = path;
-                        result.name = name;
-                        results.push(result);
-                    }
-                }
-                return results;
-            }
-        }
     }
 }

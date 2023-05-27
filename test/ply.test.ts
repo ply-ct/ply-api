@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import { expect } from 'chai';
-import { PlyData } from '../src/data/ply';
-import { FileSystemData } from '../src/data/files';
+import { PlyAccess } from '../src/data/ply';
+import { FilesAccess } from '../src/data/files';
 import { ApiConfig } from '../src/model/api';
 
 describe('ply', () => {
@@ -16,8 +16,8 @@ describe('ply', () => {
     };
 
     it('loads ply requests through github api', async () => {
-        const fileData = new FileSystemData(apiConfig);
-        const plyData = new PlyData(await fileData.getFileAccess());
+        const fileData = new FilesAccess(apiConfig);
+        const plyData = new PlyAccess(await fileData.getFileAccess());
 
         const plyBase = await plyData.getPlyBase();
         expect(plyBase).to.be.equal('test');
@@ -36,11 +36,11 @@ describe('ply', () => {
 
     it('loads request suite from cloned', async () => {
         const reposDir = '.git-repos';
-        const fileData = new FileSystemData({
+        const fileData = new FilesAccess({
             ...apiConfig,
             github: { ...apiConfig.github, reposDir }
         });
-        const plyData = new PlyData(await fileData.getFileAccess(), {
+        const plyData = new PlyAccess(await fileData.getFileAccess(), {
             repoPath: `${reposDir}/${apiConfig.name}`,
             suiteSource: true
         });
@@ -60,8 +60,10 @@ describe('ply', () => {
      * must have been cloned already (see above)
      */
     it('loads ply flows from dir', async () => {
-        const fileData = new FileSystemData({ ...apiConfig, dir: '.git-repos/ply-demo' });
-        const plyData = new PlyData(await fileData.getFileAccess(), { dir: '.git-repos/ply-demo' });
+        const fileData = new FilesAccess({ ...apiConfig, dir: '.git-repos/ply-demo' });
+        const plyData = new PlyAccess(await fileData.getFileAccess(), {
+            dir: '.git-repos/ply-demo'
+        });
 
         const plyBase = await plyData.getPlyBase();
         expect(plyBase).to.be.equal('test');
@@ -76,8 +78,8 @@ describe('ply', () => {
     });
 
     it('loads flow through github api', async () => {
-        const fileData = new FileSystemData(apiConfig);
-        const plyData = new PlyData(await fileData.getFileAccess(), { suiteSource: true });
+        const fileData = new FilesAccess(apiConfig);
+        const plyData = new PlyAccess(await fileData.getFileAccess(), { suiteSource: true });
 
         const plyBase = await plyData.getPlyBase();
         expect(plyBase).to.be.equal('test');
@@ -97,11 +99,11 @@ describe('ply', () => {
 
     it('loads api expected results from cloned', async () => {
         const reposDir = '.git-repos';
-        const fileData = new FileSystemData({
+        const fileData = new FilesAccess({
             ...apiConfig,
             github: { ...apiConfig.github, reposDir }
         });
-        const plyData = new PlyData(await fileData.getFileAccess(), {
+        const plyData = new PlyAccess(await fileData.getFileAccess(), {
             repoPath: `${reposDir}/${apiConfig.name}`,
             suiteSource: true
         });
@@ -117,8 +119,8 @@ describe('ply', () => {
     });
 
     it('loads expected results from github', async () => {
-        const fileData = new FileSystemData(apiConfig);
-        const plyData = new PlyData(await fileData.getFileAccess(), { suiteSource: true });
+        const fileData = new FilesAccess(apiConfig);
+        const plyData = new PlyAccess(await fileData.getFileAccess(), { suiteSource: true });
 
         const plyBase = await plyData.getPlyBase();
         expect(plyBase).to.be.equal('test');

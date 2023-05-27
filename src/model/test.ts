@@ -1,6 +1,6 @@
 import { Flow } from './flow';
 import { PlyRequest, PlyResponse } from './request';
-import { RunResult } from './result';
+import { ActualResults, ExpectedResults, RunResult } from './result';
 
 export interface Suite {
     /**
@@ -12,6 +12,8 @@ export interface Suite {
      */
     path: string;
     source?: string;
+    expectedResults?: ExpectedResults;
+    actualResults?: ActualResults;
 }
 
 export interface TestSuites {

@@ -1,4 +1,3 @@
-export * from './model/api';
 export * from './model/event';
 export * from './model/github';
 export * from './model/request';
