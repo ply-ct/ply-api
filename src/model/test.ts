@@ -49,20 +49,3 @@ export interface TestRun {
     request?: PlyRequest;
     response?: PlyResponse;
 }
-
-export const isPlyPath = (path: string): boolean => {
-    return path.endsWith('.ply');
-};
-export const isRequestPath = (path: string): boolean => {
-    return path.endsWith('.yaml') || path.endsWith('.yml') || isPlyPath(path);
-};
-export const isRequestSuite = (suite: Suite): suite is RequestSuite => {
-    return isRequestPath(suite.path);
-};
-
-export const isFlowPath = (path: string): boolean => {
-    return path.endsWith('.flow');
-};
-export const isFlow = (suite: Suite): suite is Flow => {
-    return isFlowPath(suite.path);
-};

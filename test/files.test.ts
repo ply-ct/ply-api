@@ -1,4 +1,3 @@
-import * as assert from 'assert';
 import { expect } from 'chai';
 import { FileSystemAccess } from '../src/util/files';
 
@@ -7,6 +6,6 @@ describe('files', () => {
 
     it('lists files', async () => {
         const tsFiles = await files.listFiles('src', { recursive: true, patterns: ['**/*.ts'] });
-        console.log('FILES: ' + JSON.stringify(tsFiles, null, 2));
+        expect(tsFiles).to.include('src/data/files.ts');
     });
 });
