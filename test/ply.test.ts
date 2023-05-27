@@ -10,7 +10,7 @@ describe('ply', () => {
         github: {
             url: 'https://github.com/ply-ct/ply-demo',
             user: 'donaldoakes',
-            token: process.env.GITHUB_TOKEN,
+            token: process.env.GH_TOKEN,
             verbose: true
         }
     };
