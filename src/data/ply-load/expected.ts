@@ -4,7 +4,7 @@ import * as yaml from '../../util/yaml';
 import { ApiExpectedResult } from '../../model/result';
 
 export class ExpectedResultsLoader {
-    constructor(private files: FileAccess, private options?: PlyDataOptions) {}
+    constructor(private files: FileAccess, private options: PlyDataOptions) {}
 
     async loadApiExpectedResults(plyBase: string): Promise<ApiExpectedResult[]> {
         const plyExpectedResults: ApiExpectedResult[] = [];
@@ -17,8 +17,7 @@ export class ExpectedResultsLoader {
                     recursive: true
                 });
             } catch (err: unknown) {
-                this.options?.logger?.error(`File access error: ${err}`);
-                console.error(err);
+                this.options.logger.error('File access error', err);
             }
             for (const path of Object.keys(resultFiles)) {
                 const expectedResults = this.readApiExpectedResults(path, resultFiles[path]);

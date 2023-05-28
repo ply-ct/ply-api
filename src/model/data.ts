@@ -1,4 +1,5 @@
 import { PlyOptions } from './options';
+import { ValuesOptions } from './value';
 import { Logger } from './log';
 
 export interface PlyDataOptions {
@@ -35,7 +36,11 @@ export interface PlyDataOptions {
      */
     actualResults?: boolean;
     /**
+     * Values options
+     */
+    valuesOptions?: ValuesOptions;
+    /**
      * Logger
      */
-    logger?: Logger;
+    logger: Logger;
 }

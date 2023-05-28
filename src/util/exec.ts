@@ -7,12 +7,14 @@ import {
     ExecOptions as CpExecOptions
 } from 'child_process';
 import { lines } from './content';
+import { Logger } from '../model/log';
 
 export interface ExecOptions extends CpExecOptions {
     log?: boolean;
     timed?: boolean;
     message?: string;
     winBase?: string;
+    logger: Logger;
 }
 
 const ENOENT = 127;
@@ -21,7 +23,8 @@ export class Exec {
     private defaultOpts: ExecOptions = {
         cwd: '.',
         log: true,
-        winBase: ''
+        winBase: '',
+        logger: console
     };
 
     readonly options: ExecOptions;
@@ -44,24 +47,24 @@ export class Exec {
             let msg = this.options.message || `Running: '${cmd}'`;
             if (this.options.log) {
                 if (this.opts?.cwd) msg += ` in directory ${this.options.cwd}`;
-                console.log(`${msg}`);
+                this.options.logger.log(`${msg}`);
             }
             const [file, args] = this.parseArgs(cmd);
             const { stdout, stderr } = await this.execFile(file, args, this.options);
-            if (logStdErr && stderr) console.error(`  ${stderr}`);
+            if (logStdErr && stderr) this.options.logger.error(`  ${stderr}`);
             if (this.options.timed) {
-                console.log(`Exec completed in ${new Date().getTime() - before} ms`);
+                this.options.logger.log(`Exec completed in ${new Date().getTime() - before} ms`);
             }
             return stdout;
         } catch (err: any) {
             if (this.options.timed) {
-                console.log(`Exec errored in ${new Date().getTime() - before} ms`);
+                this.options.logger.log(`Exec errored in ${new Date().getTime() - before} ms`);
             }
             if (err.code === 'ENOENT') {
-                if (this.options.log) console.error(`Command not found: ${cmd}`);
+                if (this.options.log) this.options.logger.error(`Command not found: ${cmd}`);
                 return ENOENT;
             } else {
-                if (logStdErr) console.error(err);
+                if (logStdErr) this.options.logger.error(err);
                 return -1;
             }
         }
@@ -110,7 +113,7 @@ export class Exec {
                 if (typeof res === 'number') {
                     if (res === ENOENT && !this.options.log) {
                         // not logged in this.doRun()
-                        console.error(`Command not found: ${cmd}`);
+                        this.options.logger.error(`Command not found: ${cmd}`);
                     }
                     return '';
                 } else {

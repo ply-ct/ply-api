@@ -18,6 +18,14 @@ export const findExpressions = (line: string): Expression[] => {
     return expressions;
 };
 
+export const isExpression = (input: string): boolean => {
+    return input.startsWith('${') && input.endsWith('}');
+};
+
+export const toExpression = (input: string): string => {
+    return '${' + input + '}';
+};
+
 export const isRegex = (expression: string): boolean => {
     return expression.startsWith('${~');
 };

@@ -2,6 +2,12 @@ import { promises as fs, existsSync as fileExists } from 'fs';
 import * as jsYaml from 'js-yaml';
 import fetch from 'cross-fetch';
 import { plyApiVersion } from '../versions';
+import { Logger } from '../model/log';
+
+export interface ContentOptions {
+    token?: string;
+    logger?: Logger;
+}
 
 /**
  * Catches errors to provide a meaningful stack
@@ -43,11 +49,14 @@ export const loadContent = (content: string, filename?: string): object => {
 /**
  * Handles text only. Returns undefined on 404, throws for other non-ok.
  */
-export const retrieveFromUrl = async (url: string, token?: string): Promise<string | undefined> => {
+export const retrieveFromUrl = async (
+    url: string,
+    options?: ContentOptions
+): Promise<string | undefined> => {
     const response = await fetch(url, {
         method: 'GET',
         headers: {
-            ...(token && { Authorization: `Bearer ${token}` }),
+            ...(options?.token && { Authorization: `Bearer ${options.token}` }),
             'User-Agent': `ply-api ${plyApiVersion}`
         }
     });
@@ -55,18 +64,25 @@ export const retrieveFromUrl = async (url: string, token?: string): Promise<stri
     if (response.ok) {
         return await response.text();
     } else {
-        console.debug(`Retrieval ${response.status} response from ${url}:`, await response.text());
+        options?.logger?.debug?.(
+            `Retrieval ${response.status} response from ${url}:`,
+            await response.text()
+        );
         if (response.status !== 404) {
             throw new Error(`Bad Response -> ${url}: ${JSON.stringify(response.status)}`);
         }
     }
 };
 
-export const loadText = async (urlOrFile: string, token?: string): Promise<string | undefined> => {
+export const loadText = async (
+    urlOrFile: string,
+    options?: ContentOptions
+): Promise<string | undefined> => {
     if (isUrl(urlOrFile)) {
+        const opts = { ...(options || {}) };
         // token only sent to https
-        const tok = urlOrFile.startsWith('https://') ? token : undefined;
-        return await retrieveFromUrl(urlOrFile, tok);
+        if (!urlOrFile.startsWith('https://')) delete opts.token;
+        return await retrieveFromUrl(urlOrFile, opts);
     } else if (fileExists(urlOrFile)) {
         return await readFile(urlOrFile);
     }
@@ -74,9 +90,9 @@ export const loadText = async (urlOrFile: string, token?: string): Promise<strin
 
 export const loadJsonOrYaml = async (
     urlOrFile: string,
-    token?: string
+    options?: ContentOptions
 ): Promise<object | undefined> => {
-    const content = await loadText(urlOrFile, token);
+    const content = await loadText(urlOrFile, options);
     if (content) return loadContent(content, urlOrFile);
 };
 

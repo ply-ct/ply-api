@@ -1,12 +1,15 @@
-import { PlyDataOptions } from '../../model/data';
 import { FileAccess } from '../../model/files';
-import { ValuesHolder } from '../../model/value';
+import { ValuesHolder, ValuesOptions } from '../../model/value';
 import { ActualResults } from '../../model/result';
 import { TestType } from '../../model/test';
+import { Flow } from '../../model/flow';
+import { Logger } from '../../model/log';
 import * as yaml from '../../util/yaml';
+import { isExpression, toExpression } from '../../values/expression';
+import { resolveIf } from '../../values/resolve';
 
 export class ValuesLoader {
-    constructor(private files: FileAccess, private options?: PlyDataOptions) {}
+    constructor(private files: FileAccess, private options: ValuesOptions & { logger: Logger }) {}
 
     /**
      * @param valuesFiles files or urls
@@ -18,7 +21,7 @@ export class ValuesLoader {
             if (contents) {
                 valuesHolders.push({ values: contents, location: { path: valuesFile } });
             } else {
-                console.error(`Values file does not exist: ${valuesFile}`);
+                this.options.logger.error(`Values file does not exist: ${valuesFile}`);
             }
         }
         return valuesHolders;
@@ -27,21 +30,20 @@ export class ValuesLoader {
     /**
      * Includes request and response object values
      */
-    readRequestRefValues(actualResults: ActualResults): ValuesHolder[] {
+    readRequestRefValues(actualResults: ActualResults): ValuesHolder {
         return this.readRefValues(actualResults, 'request');
     }
 
     /**
      * Includes request and response object values
      */
-    readFlowRefValues(actualResults: ActualResults): ValuesHolder[] {
+    readFlowRefValues(actualResults: ActualResults): ValuesHolder {
         return this.readRefValues(actualResults, 'flow');
     }
 
-    private readRefValues(actualResults: ActualResults, testType: TestType): ValuesHolder[] {
-        const valuesHolders: ValuesHolder[] = [];
+    private readRefValues(actualResults: ActualResults, testType: TestType): ValuesHolder {
+        const resultVals: any = {};
         try {
-            const resultVals: any = {};
             const obj = yaml.load(actualResults.path, actualResults.contents);
             if (typeof obj === 'object') {
                 if (testType === 'request') {
@@ -67,13 +69,10 @@ export class ValuesLoader {
                     }
                 }
             }
-            valuesHolders.push({ values: resultVals, location: { path: actualResults.path } });
         } catch (err: unknown) {
-            console.error(err);
-            this.options?.logger?.error(`Cannot process results: ${actualResults.path}`);
-            this.options?.logger?.error(`${err}`);
+            this.options.logger.error(`Cannot process results: ${actualResults.path}`, err);
         }
-        return valuesHolders;
+        return { values: resultVals, location: { path: actualResults.path } };
     }
 
     private readResult(obj: any) {
@@ -86,5 +85,43 @@ export class ValuesLoader {
             response.body = JSON.parse(response.body);
         }
         return { request, response };
+    }
+
+    /**
+     * Evaluated flow values
+     */
+    readFlowValues(flow: Flow, evalContext?: object): ValuesHolder {
+        const flowVals: any = {};
+        if (flow.attributes?.values) {
+            const required: string[] = [];
+            const rows = JSON.parse(flow.attributes.values);
+            const context = evalContext || {};
+            const trusted = this.options.trusted;
+            for (const row of rows) {
+                if (row.length > 0) {
+                    const valName = row[0];
+                    let valVal: string | undefined;
+                    if (row.length > 1 && rows[1]) {
+                        valVal = rows[1];
+                        if (isExpression(valVal!)) {
+                            valVal = resolveIf(valVal!, context, trusted);
+                        }
+                        if (row.length > 2) {
+                            let reqd = row[2] === 'true';
+                            if (row.length > 3) {
+                                let expr = row[3];
+                                if (expr) {
+                                    if (!isExpression(expr)) expr = toExpression(expr);
+                                    reqd = resolveIf(expr, context, trusted) === 'true';
+                                }
+                            }
+                            if (reqd) required.push(valName);
+                        }
+                        flowVals[valName] = valVal;
+                    }
+                }
+            }
+        }
+        return { values: flowVals, location: { path: flow.path } };
     }
 }

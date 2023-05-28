@@ -1,6 +1,6 @@
 import { existsSync, promises as fs } from 'fs';
 import fetch from 'cross-fetch';
-import { Repository, GitHubConfig } from '../model/github';
+import { Repository, GitHubOptions } from '../model/github';
 import { FileListOptions, FileList, FileAccess } from '../model/files';
 import { Exec } from '../util/exec';
 import { FileSystemAccess } from '../util/files';
@@ -16,23 +16,25 @@ export class GitHubAccess implements FileAccess {
     private authUrl?: URL;
     private clonedOrPulled = false;
 
-    constructor(readonly config: GitHubConfig) {
+    constructor(readonly options: GitHubOptions) {
         // https://github.com/ply-ct/ply-demo
-        if (config.url.endsWith('/')) config.url = config.url.substring(0, config.url.length - 1);
-        const url = new URL(config.url);
+        if (options.url.endsWith('/')) {
+            options.url = options.url.substring(0, options.url.length - 1);
+        }
+        const url = new URL(options.url);
         const pathSlash = url.pathname.indexOf('/', 1);
-        const repoPath = config.url.substring(19);
+        const repoPath = options.url.substring(19);
         this.repository = {
-            url: config.url,
+            url: options.url,
             owner: url.pathname.substring(1, pathSlash).toLowerCase(),
             name: url.pathname.substring(pathSlash + 1),
-            branch: config.branch,
+            branch: options.branch,
             apiUrl: `https://api.github.com/repos/${repoPath}`,
-            rawContentUrl: `https://raw.githubusercontent.com/${repoPath}/${config.branch}`
+            rawContentUrl: `https://raw.githubusercontent.com/${repoPath}/${options.branch}`
         };
-        if (config.token) {
+        if (options.token) {
             this.authUrl = new URL(
-                `https://${config.user}:${config.token}@github.com/${repoPath}.git`
+                `https://${options.user}:${options.token}@github.com/${repoPath}.git`
             );
         }
     }
@@ -41,8 +43,8 @@ export class GitHubAccess implements FileAccess {
      * If defined, indicates git local clone
      */
     get repoDir(): string | undefined {
-        if (this.config.reposDir) {
-            return `${this.config.reposDir}/${this.repository.name}`;
+        if (this.options.reposDir) {
+            return `${this.options.reposDir}/${this.repository.name}`;
         }
     }
 
@@ -58,7 +60,7 @@ export class GitHubAccess implements FileAccess {
                 const safeUrl = `${this.authUrl.protocol}//${this.authUrl.username}:********@${this.authUrl.host}${this.authUrl.pathname}`;
                 msg = `Running: 'clone ${safeUrl} ${repoDir}'`;
             }
-            await this.runGit(`clone ${this.authUrl || this.config.url} ${repoDir}`, '.', msg);
+            await this.runGit(`clone ${this.authUrl || this.options.url} ${repoDir}`, '.', msg);
         }
         await this.runGit(`checkout ${this.repository.branch} --`, repoDir);
         this.clonedOrPulled = true;
@@ -71,7 +73,7 @@ export class GitHubAccess implements FileAccess {
     async init() {
         const repo = await this.doGet('');
         this.repository.created = new Date(repo.created_at);
-        const branch = this.config.branch || repo.default_branch;
+        const branch = this.options.branch || repo.default_branch;
         this.repository.branch = branch;
         this.repository.rawContentUrl = `https://raw.githubusercontent.com/${this.repository.owner}/${this.repository.name}/${branch}`;
         const repoBranch = await this.doGet(`branches/${branch}`);
@@ -152,7 +154,7 @@ export class GitHubAccess implements FileAccess {
             }
 
             if (file.encoding === 'none') {
-                console.error(`Cannot download large file: ${relPath}`);
+                this.options.logger.error(`Cannot download large file: ${relPath}`);
                 return '';
             }
 
@@ -161,7 +163,7 @@ export class GitHubAccess implements FileAccess {
     }
 
     async runGit(cmd: string, cwd: string, msg?: string): Promise<string> {
-        return await new Exec({ cwd, message: msg }).run(`git ${cmd}`);
+        return await new Exec({ cwd, message: msg, logger: this.options.logger }).run(`git ${cmd}`);
     }
 
     /**
@@ -170,18 +172,22 @@ export class GitHubAccess implements FileAccess {
     async doGet(path: string): Promise<any> {
         let url = this.repository.apiUrl;
         if (path) url += `/${path}`;
-        if (this.config.verbose) console.log(`Invoking GET ${url}`);
+        if (this.options.verbose) {
+            this.options.logger.log(`Invoking GET ${url}`);
+        }
         const response = await fetch(url, {
             method: 'GET',
             headers: {
-                ...(this.config.token && { Authorization: `Bearer ${this.config.token}` }),
+                ...(this.options.token && { Authorization: `Bearer ${this.options.token}` }),
                 'User-Agent': `ply-api ${plyApiVersion}`
             }
         });
         if (response.ok) {
             return await response.json();
         } else {
-            if (this.config.verbose) console.error('GitHub response', await response.json());
+            if (this.options.verbose) {
+                this.options.logger.error('GitHub response', await response.json());
+            }
             throw new StatusError(
                 response.status,
                 `Bad GitHub Response -> ${url}: ${response.status}`
@@ -193,11 +199,13 @@ export class GitHubAccess implements FileAccess {
      * Returns an array of objects or an object.
      */
     async doGraphQlPost(query: string): Promise<any> {
-        if (this.config.verbose) console.log(`Invoking POST ${GitHubAccess.graphQlUrl}`);
+        if (this.options.verbose) {
+            this.options.logger.log(`Invoking POST ${GitHubAccess.graphQlUrl}`);
+        }
         const response = await fetch(GitHubAccess.graphQlUrl, {
             method: 'POST',
             headers: {
-                ...(this.config.token && { Authorization: `Bearer ${this.config.token}` }),
+                ...(this.options.token && { Authorization: `Bearer ${this.options.token}` }),
                 'User-Agent': `ply-api ${plyApiVersion}`,
                 'Content-Type': 'application/graphql'
             },
@@ -205,7 +213,9 @@ export class GitHubAccess implements FileAccess {
         });
 
         if (!response.ok) {
-            if (this.config.verbose) console.error('GitHub response', await response.text());
+            if (this.options.verbose) {
+                this.options.logger.error('GitHub response', await response.text());
+            }
             throw new Error(
                 `Bad GitHub Response -> ${GitHubAccess.graphQlUrl}: ${JSON.stringify(
                     response.status

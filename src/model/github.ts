@@ -1,4 +1,6 @@
-export interface GitHubConfig {
+import { Logger } from './log';
+
+export interface GitHubOptions {
     /**
      * GitHub web url
      * (eg: https://github.com/ply-ct/ply-demo)
@@ -15,6 +17,7 @@ export interface GitHubConfig {
     user?: string;
     reposDir?: string;
     verbose?: boolean;
+    logger: Logger;
 }
 
 export interface Repository {

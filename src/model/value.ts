@@ -1,3 +1,9 @@
+export interface ValuesOptions {
+    trusted?: boolean;
+    refHolder?: string;
+    env?: EnvironmentVariables;
+}
+
 export type EnvironmentVariables = { [key: string]: string | undefined };
 
 export interface ValuesLocation {
@@ -22,10 +28,8 @@ export interface ValuesHolder {
      */
     values: object | string;
     location?: ValuesLocation;
-}
-
-export interface ValueOptions {
-    trusted?: boolean;
-    refHolder?: string;
-    env?: EnvironmentVariables;
+    /**
+     * Required value names
+     */
+    required?: string[];
 }

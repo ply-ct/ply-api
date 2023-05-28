@@ -1,3 +1,10 @@
+import { GitHubOptions } from './github';
+
+export interface FileAccessOptions {
+    dir?: string;
+    githubOptions?: GitHubOptions;
+}
+
 export interface FileListOptions {
     recursive?: boolean;
     /**

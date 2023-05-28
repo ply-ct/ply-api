@@ -1,20 +1,21 @@
-import { FileAccess } from '../model/files';
-import { GitHubConfig } from '../model/github';
+import { FileAccess, FileAccessOptions } from '../model/files';
 import { FileSystemAccess } from '../util/files';
 import { GitHubAccess } from './github';
 
 export class FilesAccess {
-    constructor(readonly config: { dir?: string; github: GitHubConfig }) {}
+    constructor(readonly options: FileAccessOptions) {}
 
     private fileAccess?: FileAccess;
     async getFileAccess(): Promise<FileAccess> {
         if (!this.fileAccess) {
-            if (this.config.dir) {
-                this.fileAccess = new FileSystemAccess(this.config.dir);
-            } else {
-                const githubAccess = new GitHubAccess(this.config.github);
+            if (this.options.dir) {
+                this.fileAccess = new FileSystemAccess(this.options.dir);
+            } else if (this.options.githubOptions) {
+                const githubAccess = new GitHubAccess(this.options.githubOptions);
                 await githubAccess.init();
                 this.fileAccess = githubAccess;
+            } else {
+                throw new Error(`Options must include 'dir' or 'github'`);
             }
         }
         return this.fileAccess;

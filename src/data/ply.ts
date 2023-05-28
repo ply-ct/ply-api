@@ -3,19 +3,24 @@ import { PlyOptions } from '../model/options';
 import { FileAccess } from '../model/files';
 import { RequestSuite, TestSuites } from '../model/test';
 import { Flow } from '../model/flow';
-import { ExpectedResults, ApiExpectedResult } from '../model/result';
+import { ExpectedResults, ApiExpectedResult, ActualResults } from '../model/result';
 import { OptionsLoader } from './ply-load/options';
 import { RequestLoader } from './ply-load/requests';
 import { FlowLoader } from './ply-load/flows';
 import { ExpectedResultsLoader } from './ply-load/expected';
+import { ValuesLoader } from './ply-load/values';
+import { ValuesHolder, ValuesOptions } from '../model/value';
+import { Logger } from '../model/log';
 
 export class PlyAccess {
     readonly options: PlyDataOptions;
     private plyOptions?: PlyOptions;
+    private plyBase?: string;
 
     constructor(readonly files: FileAccess, options?: PlyDataOptions) {
-        this.options = options || {};
+        this.options = options || { logger: console };
         this.plyOptions = this.options.plyOptions;
+        this.plyBase = this.options.plyBase;
     }
 
     /**
@@ -30,7 +35,6 @@ export class PlyAccess {
         return this.plyOptions;
     }
 
-    private plyBase?: string;
     async getPlyBase(): Promise<string> {
         if (this.plyBase === undefined) {
             if (this.options?.plyBase) {
@@ -99,5 +103,35 @@ export class PlyAccess {
             this.apiExpectedResults = await loader.loadApiExpectedResults(await this.getPlyBase());
         }
         return this.apiExpectedResults;
+    }
+
+    private get valuesOptions(): ValuesOptions & { logger: Logger } {
+        return { ...this.options.valuesOptions, logger: this.options.logger };
+    }
+
+    private fileValuesHolders?: ValuesHolder[];
+    public async getFileValuesHolders(): Promise<ValuesHolder[]> {
+        if (!this.fileValuesHolders) {
+            const loader = new ValuesLoader(this.files, this.valuesOptions);
+            const valuesFiles = (await this.getPlyOptions()).valuesFiles || {};
+            const enabledValuesFiles = Object.keys(valuesFiles).filter((vf) => valuesFiles[vf]);
+            this.fileValuesHolders = await loader.loadFileValues(enabledValuesFiles);
+        }
+        return this.fileValuesHolders;
+    }
+
+    public getRequestRefValues(actualResults: ActualResults): ValuesHolder {
+        const loader = new ValuesLoader(this.files, this.valuesOptions);
+        return loader.readRequestRefValues(actualResults);
+    }
+
+    public getFlowRefValues(actualResults: ActualResults): ValuesHolder {
+        const loader = new ValuesLoader(this.files, this.valuesOptions);
+        return loader.readFlowRefValues(actualResults);
+    }
+
+    public getFlowValues(flow: Flow, evalContext?: object): ValuesHolder {
+        const loader = new ValuesLoader(this.files, this.valuesOptions);
+        return loader.readFlowValues(flow, evalContext);
     }
 }

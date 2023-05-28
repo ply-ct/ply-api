@@ -6,7 +6,7 @@ import { RequestSuite } from '../../model/test';
 import * as yaml from '../../util/yaml';
 
 export class RequestLoader {
-    constructor(private files: FileAccess, private options?: PlyDataOptions) {}
+    constructor(private files: FileAccess, private options: PlyDataOptions) {}
 
     /**
      * TODO: results
@@ -19,9 +19,9 @@ export class RequestLoader {
         });
         for (const path of Object.keys(requestFiles)) {
             try {
-                requestSuites.push(await this.readRequestSuite(plyBase, path, requestFiles[path]));
+                requestSuites.push(this.readRequestSuite(plyBase, path, requestFiles[path]));
             } catch (err: unknown) {
-                this.options?.logger?.error(`${err}`, err);
+                this.options.logger.error(`${err}`, err);
             }
         }
         return requestSuites;
@@ -52,7 +52,7 @@ export class RequestLoader {
             path,
             requests
         };
-        if (this.options?.suiteSource) requestSuite.source = contents;
+        if (this.options.suiteSource) requestSuite.source = contents;
         return requestSuite;
     }
 }

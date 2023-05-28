@@ -2,21 +2,19 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import { PlyAccess } from '../src/data/ply';
 import { FilesAccess } from '../src/data/files';
-import { ApiConfig } from '../src/model/api';
+import { GitHubOptions } from '../src/model/github';
 
 describe('ply', () => {
-    const apiConfig: ApiConfig = {
-        name: 'ply-demo',
-        github: {
-            url: 'https://github.com/ply-ct/ply-demo',
-            user: 'donaldoakes',
-            token: process.env.GH_TOKEN,
-            verbose: true
-        }
+    const githubOptions: GitHubOptions = {
+        url: 'https://github.com/ply-ct/ply-demo',
+        user: 'donaldoakes',
+        token: process.env.GH_TOKEN,
+        verbose: true,
+        logger: console
     };
 
     it('loads ply requests through github api', async () => {
-        const fileData = new FilesAccess(apiConfig);
+        const fileData = new FilesAccess({ githubOptions });
         const plyData = new PlyAccess(await fileData.getFileAccess());
 
         const plyBase = await plyData.getPlyBase();
@@ -37,12 +35,12 @@ describe('ply', () => {
     it('loads request suite from cloned', async () => {
         const reposDir = '.git-repos';
         const fileData = new FilesAccess({
-            ...apiConfig,
-            github: { ...apiConfig.github, reposDir }
+            githubOptions: { ...githubOptions, reposDir }
         });
         const plyData = new PlyAccess(await fileData.getFileAccess(), {
-            repoPath: `${reposDir}/${apiConfig.name}`,
-            suiteSource: true
+            repoPath: `${reposDir}/ply-demo`,
+            suiteSource: true,
+            logger: console
         });
 
         const plyBase = await plyData.getPlyBase();
@@ -60,9 +58,10 @@ describe('ply', () => {
      * must have been cloned already (see above)
      */
     it('loads ply flows from dir', async () => {
-        const fileData = new FilesAccess({ ...apiConfig, dir: '.git-repos/ply-demo' });
+        const fileData = new FilesAccess({ dir: '.git-repos/ply-demo' });
         const plyData = new PlyAccess(await fileData.getFileAccess(), {
-            dir: '.git-repos/ply-demo'
+            dir: '.git-repos/ply-demo',
+            logger: console
         });
 
         const plyBase = await plyData.getPlyBase();
@@ -78,8 +77,11 @@ describe('ply', () => {
     });
 
     it('loads flow through github api', async () => {
-        const fileData = new FilesAccess(apiConfig);
-        const plyData = new PlyAccess(await fileData.getFileAccess(), { suiteSource: true });
+        const fileData = new FilesAccess({ githubOptions });
+        const plyData = new PlyAccess(await fileData.getFileAccess(), {
+            suiteSource: true,
+            logger: console
+        });
 
         const plyBase = await plyData.getPlyBase();
         expect(plyBase).to.be.equal('test');
@@ -100,12 +102,12 @@ describe('ply', () => {
     it('loads api expected results from cloned', async () => {
         const reposDir = '.git-repos';
         const fileData = new FilesAccess({
-            ...apiConfig,
-            github: { ...apiConfig.github, reposDir }
+            githubOptions: { ...githubOptions, reposDir }
         });
         const plyData = new PlyAccess(await fileData.getFileAccess(), {
-            repoPath: `${reposDir}/${apiConfig.name}`,
-            suiteSource: true
+            repoPath: `${reposDir}/ply-demo`,
+            suiteSource: true,
+            logger: console
         });
 
         const expectedResults = await plyData.getApiExpectedResults();
@@ -118,9 +120,9 @@ describe('ply', () => {
         expect(moviesApiResults.length).to.be.equal(5);
     });
 
-    it('loads expected results from github', async () => {
-        const fileData = new FilesAccess(apiConfig);
-        const plyData = new PlyAccess(await fileData.getFileAccess(), { suiteSource: true });
+    it('loads expected results from github api', async () => {
+        const fileData = new FilesAccess({ githubOptions });
+        const plyData = new PlyAccess(await fileData.getFileAccess());
 
         const plyBase = await plyData.getPlyBase();
         expect(plyBase).to.be.equal('test');

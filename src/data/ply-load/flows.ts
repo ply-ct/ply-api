@@ -8,7 +8,7 @@ import { Flow, Step, Subflow } from '../../model/flow';
  * TODO: results
  */
 export class FlowLoader {
-    constructor(private files: FileAccess, private options?: PlyDataOptions) {}
+    constructor(private files: FileAccess, private options: PlyDataOptions) {}
 
     async loadPlyFlows(plyBase: string): Promise<Flow[]> {
         const plyFlows: Flow[] = [];
@@ -20,7 +20,7 @@ export class FlowLoader {
             try {
                 plyFlows.push(this.readPlyFlow(plyBase, path, flowFiles[path]));
             } catch (err: unknown) {
-                this.options?.logger?.error(`${err}`, err);
+                this.options.logger.error(`${err}`, err);
             }
         }
         return plyFlows;
@@ -49,7 +49,7 @@ export class FlowLoader {
             plyFlow.subflows = subflows;
         }
         this.sortSubflowsAndSteps(plyFlow);
-        if (this.options?.suiteSource) plyFlow.source = contents;
+        if (this.options.suiteSource) plyFlow.source = contents;
         return plyFlow;
     }
 

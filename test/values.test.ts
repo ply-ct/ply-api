@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ValuesAccess } from '../src/data/values';
+import { PlyAccess } from '../src/data/ply';
 
 describe('values', () => {
     const vals1 = {

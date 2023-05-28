@@ -4,7 +4,7 @@ import { PlyDataOptions } from '../../model/data';
 import { loadContent } from '../../util/content';
 
 export class OptionsLoader {
-    constructor(private files: FileAccess, private options?: PlyDataOptions) {}
+    constructor(private files: FileAccess, private options: PlyDataOptions) {}
 
     /**
      * TODO: skipped
@@ -25,7 +25,7 @@ export class OptionsLoader {
             }
         }
         if (plyConfigContents) {
-            this.options?.logger?.log(`Loading ply config from: ${plyConfigFile}`);
+            this.options.logger.log(`Loading ply config from: ${plyConfigFile}`);
             const plyConfig = loadContent(plyConfigContents, plyConfigFile) as PlyOptions;
             plyOptions = { ...plyOptions, ...plyConfig };
         }
