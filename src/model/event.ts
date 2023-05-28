@@ -2,6 +2,10 @@ import { Outcome } from './result';
 import { TestType } from './test';
 import { FlowInstance, StepInstance, SubflowInstance } from './flow';
 
+export interface Listener<T> {
+    (event: T): any;
+}
+
 /**
  * Event for 'start' listeners.
  */

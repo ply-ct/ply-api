@@ -26,10 +26,6 @@ export interface RequestSuite extends Suite {
     requests: PlyRequest[];
 }
 
-export interface Values {
-    [path: string]: object;
-}
-
 export interface SuiteRun {
     suite: string;
     run: number;

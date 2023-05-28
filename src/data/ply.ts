@@ -9,7 +9,7 @@ import { RequestLoader } from './ply-load/requests';
 import { FlowLoader } from './ply-load/flows';
 import { ExpectedResultsLoader } from './ply-load/expected';
 import { ValuesLoader } from './ply-load/values';
-import { ValuesHolder, ValuesOptions } from '../model/value';
+import { ValuesHolder, EvalOptions } from '../model/value';
 import { Logger } from '../model/log';
 
 export class PlyAccess {
@@ -105,7 +105,7 @@ export class PlyAccess {
         return this.apiExpectedResults;
     }
 
-    private get valuesOptions(): ValuesOptions & { logger: Logger } {
+    private get valuesOptions(): EvalOptions & { logger: Logger } {
         return { ...this.options.valuesOptions, logger: this.options.logger };
     }
 

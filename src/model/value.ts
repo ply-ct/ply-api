@@ -1,4 +1,4 @@
-export interface ValuesOptions {
+export interface EvalOptions {
     trusted?: boolean;
     refHolder?: string;
     env?: EnvironmentVariables;

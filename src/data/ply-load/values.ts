@@ -1,5 +1,5 @@
 import { FileAccess } from '../../model/files';
-import { ValuesHolder, ValuesOptions } from '../../model/value';
+import { ValuesHolder, EvalOptions } from '../../model/value';
 import { ActualResults } from '../../model/result';
 import { TestType } from '../../model/test';
 import { Flow } from '../../model/flow';
@@ -9,7 +9,7 @@ import { isExpression, toExpression } from '../../values/expression';
 import { resolveIf } from '../../values/resolve';
 
 export class ValuesLoader {
-    constructor(private files: FileAccess, private options: ValuesOptions & { logger: Logger }) {}
+    constructor(private files: FileAccess, private options: EvalOptions & { logger: Logger }) {}
 
     /**
      * @param valuesFiles files or urls
