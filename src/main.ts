@@ -14,7 +14,6 @@ export * from './model/test';
 export * from './model/value';
 export * as openapi from './model/openapi';
 export * from './data/ply';
-export * from './util/files';
 export * from './util/json';
 export * from './values/expression';
 export * from './values/resolve';

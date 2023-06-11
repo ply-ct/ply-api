@@ -1,0 +1,3 @@
+{
+  "githubToken": "${GITHUB_TOKEN}"
+}

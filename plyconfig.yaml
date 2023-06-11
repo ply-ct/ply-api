@@ -1,0 +1,3 @@
+testsLocation: test/ply
+valuesFiles:
+  test/ply/values.json: true

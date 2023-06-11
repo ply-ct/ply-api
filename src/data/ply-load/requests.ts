@@ -1,4 +1,4 @@
-import { relative } from 'path';
+import path from 'path-browserify';
 import { PlyDataOptions } from '../../model/data';
 import { FileAccess } from '../../model/files';
 import { PlyRequest } from '../../model/request';
@@ -37,19 +37,19 @@ export class RequestLoader {
         }
     }
 
-    private readRequestSuite(plyBase: string, path: string, contents: string): RequestSuite {
-        const requestsObj = yaml.load(path, contents, true) as {
+    private readRequestSuite(plyBase: string, relPath: string, contents: string): RequestSuite {
+        const requestsObj = yaml.load(relPath, contents, true) as {
             [name: string]: PlyRequest;
         };
         if (!requestsObj) {
-            throw new Error(`Bad ply request: ${plyBase}/${path}`);
+            throw new Error(`Bad ply request: ${plyBase}/${relPath}`);
         }
         const requests = Object.keys(requestsObj).map((name) => {
             return { ...requestsObj[name], name };
         });
         const requestSuite: RequestSuite = {
-            name: relative(plyBase, path),
-            path,
+            name: path.relative(plyBase, relPath),
+            path: relPath,
             requests
         };
         if (this.options.suiteSource) requestSuite.source = contents;

@@ -1,4 +1,4 @@
-import { relative } from 'path';
+import path from 'path-browserify';
 import { PlyDataOptions } from '../../model/data';
 import { FileAccess } from '../../model/files';
 import * as yaml from '../../util/yaml';
@@ -33,13 +33,17 @@ export class FlowLoader {
         }
     }
 
-    private readPlyFlow(plyBase: string, path: string, contents: string): Flow {
-        const flow = yaml.load(path, contents) as Flow;
+    private readPlyFlow(plyBase: string, relPath: string, contents: string): Flow {
+        const flow = yaml.load(relPath, contents) as Flow;
         if (!flow) {
-            throw new Error(`Bad ply flow: ${plyBase}/${path}`);
+            throw new Error(`Bad ply flow: ${plyBase}/${relPath}`);
         }
         flow.steps?.forEach((step) => (step.name = step.name.replace(/\r?\n/g, ' ')));
-        const plyFlow: Flow = { name: relative(plyBase, path), path, steps: flow.steps || [] };
+        const plyFlow: Flow = {
+            name: path.relative(plyBase, relPath),
+            path: relPath,
+            steps: flow.steps || []
+        };
         if (flow.subflows) {
             const subflows: Subflow[] = flow.subflows;
             subflows.forEach((subflow) => {

@@ -1,3 +1,5 @@
+import { Executor } from './exec';
+import { FileAccess } from './files';
 import { Logger } from './log';
 
 export interface GitHubOptions {
@@ -18,6 +20,7 @@ export interface GitHubOptions {
     reposDir?: string;
     verbose?: boolean;
     logger: Logger;
+    localRepository?: LocalRepository;
 }
 
 export interface Repository {
@@ -29,6 +32,12 @@ export interface Repository {
     rawContentUrl: string;
     created?: Date;
     lastCommit?: Date;
+}
+
+export interface LocalRepository {
+    dir: string;
+    fileSystem: FileAccess;
+    executor: Executor;
 }
 
 export type DependabotState = 'OPEN' | 'FIXED' | 'DISMISSED';

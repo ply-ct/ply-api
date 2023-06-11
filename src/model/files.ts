@@ -24,6 +24,7 @@ export interface FileList {
  * Handles relative-pathed file access for
  */
 export interface FileAccess {
+    exists(relPath: string): Promise<boolean>;
     /**
      * Returns matching file paths under dirPath. Empty if relPath does not exist.
      */

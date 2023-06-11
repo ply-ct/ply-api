@@ -1,9 +1,6 @@
-import { existsSync, promises as fs } from 'fs';
 import fetch from 'cross-fetch';
-import { Repository, GitHubOptions } from '../model/github';
+import { Repository, GitHubOptions, LocalRepository } from '../model/github';
 import { FileListOptions, FileList, FileAccess } from '../model/files';
-import { Exec } from '../util/exec';
-import { FileSystemAccess } from '../util/files';
 import { StatusError } from '../model/request';
 import { plyApiVersion } from '../versions';
 import { isMatch } from '../util/match';
@@ -39,30 +36,42 @@ export class GitHubAccess implements FileAccess {
         }
     }
 
-    /**
-     * If defined, indicates git local clone
-     */
-    get repoDir(): string | undefined {
-        if (this.options.reposDir) {
-            return `${this.options.reposDir}/${this.repository.name}`;
+    async exists(relPath: string): Promise<boolean> {
+        const localRepo = this.options.localRepository;
+        if (localRepo) {
+            await this.cloneOrPull(localRepo);
+            return await localRepo.fileSystem.exists(relPath);
+        } else {
+            const response = await fetch(`${this.repository.apiUrl}/contents/${relPath}`, {
+                method: 'GET',
+                headers: {
+                    ...(this.options.token && { Authorization: `Bearer ${this.options.token}` }),
+                    'User-Agent': `ply-api ${plyApiVersion}`
+                }
+            });
+            return response.ok;
         }
     }
 
-    async cloneOrPull(repoDir: string) {
+    async cloneOrPull(localRepo: LocalRepository) {
         if (this.clonedOrPulled) return;
-        if (existsSync(repoDir)) {
+        if (await localRepo.fileSystem.exists(localRepo.dir)) {
             // pull
-            await this.runGit('pull', repoDir);
+            await this.runGit('pull', localRepo.dir);
         } else {
             // clone
             let msg: string | undefined;
             if (this.authUrl) {
                 const safeUrl = `${this.authUrl.protocol}//${this.authUrl.username}:********@${this.authUrl.host}${this.authUrl.pathname}`;
-                msg = `Running: 'clone ${safeUrl} ${repoDir}'`;
+                msg = `Running: 'clone ${safeUrl} ${localRepo.dir}'`;
             }
-            await this.runGit(`clone ${this.authUrl || this.options.url} ${repoDir}`, '.', msg);
+            await this.runGit(
+                `clone ${this.authUrl || this.options.url} ${localRepo.dir}`,
+                '.',
+                msg
+            );
         }
-        await this.runGit(`checkout ${this.repository.branch} --`, repoDir);
+        await this.runGit(`checkout ${this.repository.branch} --`, localRepo.dir);
         this.clonedOrPulled = true;
     }
 
@@ -81,9 +90,10 @@ export class GitHubAccess implements FileAccess {
     }
 
     async listFiles(relPath: string, options?: FileListOptions): Promise<string[]> {
-        if (this.repoDir) {
-            await this.cloneOrPull(this.repoDir);
-            return await new FileSystemAccess(this.repoDir).listFiles(relPath, options);
+        const localRepo = this.options.localRepository;
+        if (localRepo) {
+            await this.cloneOrPull(localRepo);
+            return await localRepo.fileSystem.listFiles(relPath, options);
         } else {
             // TODO: one request? paginated?
             const filePaths: string[] = [];
@@ -111,25 +121,30 @@ export class GitHubAccess implements FileAccess {
     }
 
     async getFileList(relPath: string, options?: FileListOptions): Promise<FileList> {
-        if (this.repoDir) {
-            await this.cloneOrPull(this.repoDir);
-            return await new FileSystemAccess(this.repoDir).getFileList(relPath, options);
+        const localRepo = this.options.localRepository;
+        if (localRepo) {
+            await this.cloneOrPull(localRepo);
+            return await localRepo.fileSystem.getFileList(relPath, options);
         } else {
             const fileList: FileList = {};
             const filePaths = await this.listFiles(relPath, options);
             for (const filePath of filePaths) {
-                fileList[filePath] = await this.getTextFileContent(filePath);
+                const content = await this.getTextFileContent(filePath);
+                if (content) {
+                    fileList[filePath] = content;
+                }
             }
             return fileList;
         }
     }
 
     async readTextFile(relPath: string): Promise<string | undefined> {
-        if (this.repoDir) {
-            await this.cloneOrPull(this.repoDir);
-            const file = `${this.repoDir}/${relPath}`;
-            if (existsSync(file)) {
-                return await fs.readFile(file, { encoding: 'utf8' });
+        const localRepo = this.options.localRepository;
+        if (localRepo) {
+            await this.cloneOrPull(localRepo);
+            const file = `${localRepo.dir}/${relPath}`;
+            if (await localRepo.fileSystem.exists(file)) {
+                return await localRepo.fileSystem.readTextFile(file);
             }
         } else {
             try {
@@ -140,10 +155,12 @@ export class GitHubAccess implements FileAccess {
         }
     }
 
-    async getTextFileContent(relPath: string): Promise<string> {
-        if (this.repoDir) {
-            await this.cloneOrPull(this.repoDir);
-            return await fs.readFile(`${this.repoDir}/${relPath}`, { encoding: 'utf8' });
+    async getTextFileContent(relPath: string): Promise<string | undefined> {
+        const localRepo = this.options.localRepository;
+        if (localRepo) {
+            await this.cloneOrPull(localRepo);
+            const file = `${localRepo.dir}/${relPath}`;
+            return await localRepo.fileSystem.readTextFile(file);
         } else {
             const file = await this.doGet(`contents/${relPath}`);
             if (typeof file !== 'object') {
@@ -162,8 +179,16 @@ export class GitHubAccess implements FileAccess {
         }
     }
 
-    async runGit(cmd: string, cwd: string, msg?: string): Promise<string> {
-        return await new Exec({ cwd, message: msg, logger: this.options.logger }).run(`git ${cmd}`);
+    async runGit(cmd: string, cwd: string, msg?: string): Promise<number> {
+        if (this.options.localRepository) {
+            return await this.options.localRepository.executor.exec(`git ${cmd}`, {
+                cwd,
+                message: msg,
+                logger: this.options.logger
+            });
+        } else {
+            throw new Error('Cannot run git remotely');
+        }
     }
 
     /**

@@ -1,0 +1,6 @@
+github-contents:
+  url: https://api.github.com/repos/ply-ct/ply-demo/contents/test/flows/get-movies.ply.flow
+  method: GET
+  headers:
+    Accept: application/json
+    Authorization: ${githubToken}
