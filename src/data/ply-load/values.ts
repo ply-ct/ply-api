@@ -1,12 +1,17 @@
 import { FileAccess } from '../../model/files';
-import { ValuesHolder, EvalOptions } from '../../model/value';
+import {
+    ValuesHolder,
+    EvalOptions,
+    isExpression,
+    toExpression,
+    resolveIf
+} from '@ply-ct/ply-values';
 import { ActualResults } from '../../model/result';
 import { TestType } from '../../model/test';
 import { Flow } from '../../model/flow';
 import { Logger } from '../../model/log';
 import * as yaml from '../../util/yaml';
-import { isExpression, toExpression } from '../../values/expression';
-import { resolveIf } from '../../values/resolve';
+import { parseJsonc } from '../../util/json';
 
 export class ValuesLoader {
     constructor(private files: FileAccess, private options: EvalOptions & { logger: Logger }) {}
@@ -19,7 +24,10 @@ export class ValuesLoader {
         for (const valuesFile of valuesFiles) {
             const contents = await this.files.readTextFile(valuesFile);
             if (contents) {
-                valuesHolders.push({ values: contents, location: { path: valuesFile } });
+                valuesHolders.push({
+                    values: parseJsonc(valuesFile, contents),
+                    location: { path: valuesFile }
+                });
             } else {
                 this.options.logger.error(`Values file does not exist: ${valuesFile}`);
             }

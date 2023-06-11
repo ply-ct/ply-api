@@ -1,6 +1,6 @@
 import * as jsYaml from 'js-yaml';
 import fetch from 'cross-fetch';
-import { plyApiVersion } from '../versions';
+import { plyApiVersion } from '../version';
 import { Logger } from '../model/log';
 
 export interface ContentOptions {

@@ -1,5 +1,5 @@
+import { EvalOptions } from '@ply-ct/ply-values';
 import { PlyOptions } from './options';
-import { EvalOptions } from './value';
 import { Logger } from './log';
 
 export interface PlyDataOptions {

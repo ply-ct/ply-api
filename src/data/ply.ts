@@ -1,6 +1,8 @@
+import { ValuesHolder, EvalOptions } from '@ply-ct/ply-values';
 import { PlyDataOptions } from '../model/data';
 import { PlyOptions } from '../model/options';
 import { FileAccess } from '../model/files';
+import { Logger } from '../model/log';
 import { RequestSuite, TestSuites } from '../model/test';
 import { Flow } from '../model/flow';
 import { ExpectedResults, ApiExpectedResult, ActualResults } from '../model/result';
@@ -9,8 +11,6 @@ import { RequestLoader } from './ply-load/requests';
 import { FlowLoader } from './ply-load/flows';
 import { ExpectedResultsLoader } from './ply-load/expected';
 import { ValuesLoader } from './ply-load/values';
-import { ValuesHolder, EvalOptions } from '../model/value';
-import { Logger } from '../model/log';
 
 export class PlyAccess {
     readonly options: PlyDataOptions;

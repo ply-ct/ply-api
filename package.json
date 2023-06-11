@@ -12,13 +12,14 @@
   },
   "scripts": {
     "build": "npm run ver && tsc && tsc --project test",
-    "ver": "PKG_VER=$(jq -r .version ./package.json) && echo export const plyApiVersion = \\'$PKG_VER\\'\\; > src/versions.ts",
+    "ver": "PKG_VER=$(jq -r .version ./package.json) && echo export const plyApiVersion = \\'$PKG_VER\\'\\; > src/version.ts",
     "lint": "eslint src --max-warnings 5 && prettier --check ./",
     "pretest": "npm run lint && npm run build",
     "mocha": "cross-env TS_NODE_PREFER_TS_EXTS=true mocha --require ts-node/register test/**/*.test.ts",
     "test": "npm run mocha"
   },
   "dependencies": {
+    "@ply-ct/ply-values": "^0.1.0",
     "cross-fetch": "^3.1.5",
     "http-status-codes": "^2.2.0",
     "js-yaml": "^4.1.0",

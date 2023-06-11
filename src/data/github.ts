@@ -2,7 +2,7 @@ import fetch from 'cross-fetch';
 import { Repository, GitHubOptions, LocalRepository } from '../model/github';
 import { FileListOptions, FileList, FileAccess } from '../model/files';
 import { StatusError } from '../model/request';
-import { plyApiVersion } from '../versions';
+import { plyApiVersion } from '../version';
 import { isMatch } from '../util/match';
 
 // TODO shallow clone
