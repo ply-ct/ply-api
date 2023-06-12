@@ -28,7 +28,7 @@ export class FlowLoader {
 
     async loadPlyFlow(plyBase: string, path: string): Promise<Flow | undefined> {
         const contents = await this.files.readTextFile(path);
-        if (contents) {
+        if (contents !== undefined) {
             return this.readPlyFlow(plyBase, path, contents);
         }
     }

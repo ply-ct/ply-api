@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { FileSystemAccess } from '../src/util/files';
+import { FileSystemAccess } from '../src/data/files';
 
 describe('files', () => {
     const files = new FileSystemAccess('.');

@@ -88,7 +88,7 @@ export class PlyAccess {
 
     public async getExpectedResults(path: string): Promise<ExpectedResults | undefined> {
         const contents = await this.files.readTextFile(path);
-        if (contents) {
+        if (contents !== undefined) {
             return { path: path, contents };
         }
     }

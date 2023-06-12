@@ -24,7 +24,7 @@ export class OptionsLoader {
                 plyConfigContents = await this.files.readTextFile(plyConfigFile);
             }
         }
-        if (plyConfigContents) {
+        if (plyConfigContents !== undefined) {
             this.options.logger.log(`Loading ply config from: ${plyConfigFile}`);
             const plyConfig = loadContent(plyConfigContents, plyConfigFile) as PlyOptions;
             plyOptions = { ...plyOptions, ...plyConfig };

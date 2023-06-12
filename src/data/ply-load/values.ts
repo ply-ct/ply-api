@@ -23,7 +23,7 @@ export class ValuesLoader {
         const valuesHolders: ValuesHolder[] = [];
         for (const valuesFile of valuesFiles) {
             const contents = await this.files.readTextFile(valuesFile);
-            if (contents) {
+            if (contents !== undefined) {
                 valuesHolders.push({
                     values: parseJsonc(valuesFile, contents),
                     location: { path: valuesFile }

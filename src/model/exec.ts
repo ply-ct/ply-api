@@ -4,6 +4,7 @@ export interface ExecOptions {
     cwd: string;
     message?: string;
     logger: Logger;
+    timed?: boolean;
 }
 
 export interface Executor {

@@ -17,7 +17,6 @@ export interface GitHubOptions {
      */
     token?: string;
     user?: string;
-    reposDir?: string;
     verbose?: boolean;
     logger: Logger;
     localRepository?: LocalRepository;

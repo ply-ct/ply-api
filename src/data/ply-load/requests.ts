@@ -32,7 +32,7 @@ export class RequestLoader {
         path: string
     ): Promise<RequestSuite | undefined> {
         const contents = await this.files.readTextFile(path);
-        if (contents) {
+        if (contents !== undefined) {
             return this.readRequestSuite(plyBase, path, contents);
         }
     }

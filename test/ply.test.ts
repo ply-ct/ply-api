@@ -1,8 +1,10 @@
 import * as assert from 'assert';
 import { expect } from 'chai';
 import { PlyAccess } from '../src/data/ply';
-import { FilesAccess } from '../src/data/files';
+import { GitHubAccess } from '../src/data/github';
 import { GitHubOptions } from '../src/model/github';
+import { FileSystemAccess } from '../src/data/files';
+import { CommandExecutor } from '../src/util/exec';
 
 describe('ply', () => {
     const githubOptions: GitHubOptions = {
@@ -14,8 +16,8 @@ describe('ply', () => {
     };
 
     it('loads ply requests through github api', async () => {
-        const fileData = new FilesAccess({ githubOptions });
-        const plyData = new PlyAccess(await fileData.getFileAccess());
+        const fileAccess = new GitHubAccess(githubOptions);
+        const plyData = new PlyAccess(fileAccess);
 
         const plyBase = await plyData.getPlyBase();
         expect(plyBase).to.be.equal('test');
@@ -33,12 +35,17 @@ describe('ply', () => {
     });
 
     it('loads request suite from cloned', async () => {
-        const reposDir = '.git-repos';
-        const fileData = new FilesAccess({
-            githubOptions: { ...githubOptions, reposDir }
+        const gitFileAccess = new FileSystemAccess('.');
+        const fileAccess = new GitHubAccess({
+            ...githubOptions,
+            localRepository: {
+                dir: '.git-repos/ply-demo',
+                fileSystem: gitFileAccess,
+                executor: new CommandExecutor()
+            }
         });
-        const plyData = new PlyAccess(await fileData.getFileAccess(), {
-            repoPath: `${reposDir}/ply-demo`,
+        const plyData = new PlyAccess(fileAccess, {
+            repoPath: '.git-repos/ply-demo',
             suiteSource: true,
             logger: console
         });
@@ -58,8 +65,8 @@ describe('ply', () => {
      * must have been cloned already (see above)
      */
     it('loads ply flows from dir', async () => {
-        const fileData = new FilesAccess({ dir: '.git-repos/ply-demo' });
-        const plyData = new PlyAccess(await fileData.getFileAccess(), {
+        const fileAccess = new FileSystemAccess('.git-repos/ply-demo');
+        const plyData = new PlyAccess(fileAccess, {
             dir: '.git-repos/ply-demo',
             logger: console
         });
@@ -77,8 +84,8 @@ describe('ply', () => {
     });
 
     it('loads flow through github api', async () => {
-        const fileData = new FilesAccess({ githubOptions });
-        const plyData = new PlyAccess(await fileData.getFileAccess(), {
+        const fileAccess = new GitHubAccess(githubOptions);
+        const plyData = new PlyAccess(fileAccess, {
             suiteSource: true,
             logger: console
         });
@@ -100,12 +107,17 @@ describe('ply', () => {
     });
 
     it('loads api expected results from cloned', async () => {
-        const reposDir = '.git-repos';
-        const fileData = new FilesAccess({
-            githubOptions: { ...githubOptions, reposDir }
+        const gitFileAccess = new FileSystemAccess('.git-repos/ply-demo');
+        const fileAccess = new GitHubAccess({
+            ...githubOptions,
+            localRepository: {
+                dir: '.git-repos/ply-demo',
+                fileSystem: gitFileAccess,
+                executor: new CommandExecutor()
+            }
         });
-        const plyData = new PlyAccess(await fileData.getFileAccess(), {
-            repoPath: `${reposDir}/ply-demo`,
+        const plyData = new PlyAccess(fileAccess, {
+            repoPath: '.git-repos/ply-demo',
             suiteSource: true,
             logger: console
         });
@@ -121,8 +133,8 @@ describe('ply', () => {
     });
 
     it('loads expected results from github api', async () => {
-        const fileData = new FilesAccess({ githubOptions });
-        const plyData = new PlyAccess(await fileData.getFileAccess());
+        const fileAccess = new GitHubAccess(githubOptions);
+        const plyData = new PlyAccess(fileAccess);
 
         const plyBase = await plyData.getPlyBase();
         expect(plyBase).to.be.equal('test');
