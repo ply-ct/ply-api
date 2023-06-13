@@ -114,8 +114,12 @@ export class PlyAccess {
         if (!this.fileValuesHolders) {
             const loader = new ValuesLoader(this.files, this.valuesOptions);
             const valuesFiles = (await this.getPlyOptions()).valuesFiles || {};
-            const enabledValuesFiles = Object.keys(valuesFiles).filter((vf) => valuesFiles[vf]);
-            this.fileValuesHolders = await loader.loadFileValues(enabledValuesFiles);
+            if (Array.isArray(valuesFiles)) {
+                this.fileValuesHolders = await loader.loadFileValues(valuesFiles);
+            } else {
+                const enabledValuesFiles = Object.keys(valuesFiles).filter((vf) => valuesFiles[vf]);
+                this.fileValuesHolders = await loader.loadFileValues(enabledValuesFiles);
+            }
         }
         return this.fileValuesHolders;
     }

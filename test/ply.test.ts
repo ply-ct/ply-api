@@ -7,7 +7,7 @@ import { FileSystemAccess } from '../src/data/files';
 import { CommandExecutor } from '../src/util/exec';
 
 describe('ply', () => {
-    const githubOptions: GitHubOptions = {
+    const gitHubOptions: GitHubOptions = {
         url: 'https://github.com/ply-ct/ply-demo',
         user: 'donaldoakes',
         token: process.env.GH_TOKEN,
@@ -16,8 +16,8 @@ describe('ply', () => {
     };
 
     it('loads ply requests through github api', async () => {
-        const fileAccess = new GitHubAccess(githubOptions);
-        const plyData = new PlyAccess(fileAccess);
+        const gitHubAccess = new GitHubAccess(gitHubOptions);
+        const plyData = new PlyAccess(gitHubAccess);
 
         const plyBase = await plyData.getPlyBase();
         expect(plyBase).to.be.equal('test');
@@ -35,16 +35,16 @@ describe('ply', () => {
     });
 
     it('loads request suite from cloned', async () => {
-        const gitFileAccess = new FileSystemAccess('.git-repos/ply-demo');
-        const fileAccess = new GitHubAccess({
-            ...githubOptions,
+        const fileAccess = new FileSystemAccess('.git-repos/ply-demo');
+        const gitHubAccess = new GitHubAccess({
+            ...gitHubOptions,
             localRepository: {
                 dir: '.git-repos/ply-demo',
-                fileSystem: gitFileAccess,
+                fileSystem: fileAccess,
                 executor: new CommandExecutor()
             }
         });
-        const plyData = new PlyAccess(fileAccess, {
+        const plyData = new PlyAccess(gitHubAccess, {
             suiteSource: true,
             logger: console
         });
@@ -83,8 +83,8 @@ describe('ply', () => {
     });
 
     it('loads flow through github api', async () => {
-        const fileAccess = new GitHubAccess(githubOptions);
-        const plyData = new PlyAccess(fileAccess, {
+        const gitHubAccess = new GitHubAccess(gitHubOptions);
+        const plyData = new PlyAccess(gitHubAccess, {
             suiteSource: true,
             logger: console
         });
@@ -106,16 +106,16 @@ describe('ply', () => {
     });
 
     it('loads api expected results from cloned', async () => {
-        const gitFileAccess = new FileSystemAccess('.git-repos/ply-demo');
-        const fileAccess = new GitHubAccess({
-            ...githubOptions,
+        const fileAccess = new FileSystemAccess('.git-repos/ply-demo');
+        const gitHubAccess = new GitHubAccess({
+            ...gitHubOptions,
             localRepository: {
                 dir: '.git-repos/ply-demo',
-                fileSystem: gitFileAccess,
+                fileSystem: fileAccess,
                 executor: new CommandExecutor()
             }
         });
-        const plyData = new PlyAccess(fileAccess, {
+        const plyData = new PlyAccess(gitHubAccess, {
             suiteSource: true,
             logger: console
         });
@@ -131,8 +131,8 @@ describe('ply', () => {
     });
 
     it('loads expected results from github api', async () => {
-        const fileAccess = new GitHubAccess(githubOptions);
-        const plyData = new PlyAccess(fileAccess);
+        const gitHubAccess = new GitHubAccess(gitHubOptions);
+        const plyData = new PlyAccess(gitHubAccess);
 
         const plyBase = await plyData.getPlyBase();
         expect(plyBase).to.be.equal('test');
@@ -141,5 +141,48 @@ describe('ply', () => {
         const results = await plyData.getExpectedResults(resultsPath);
         assert.ok(results);
         expect(results.path).to.be.equal(resultsPath);
+    });
+
+    it('loads values through github api', async () => {
+        const fileAccess = new FileSystemAccess('.git-repos/ply-demo');
+        const plyData = new PlyAccess(fileAccess, {
+            dir: '.git-repos/ply-demo',
+            logger: console
+        });
+
+        const plyBase = await plyData.getPlyBase();
+        expect(plyBase).to.be.equal('test');
+
+        const valuesHolders = await plyData.getFileValuesHolders();
+        expect(valuesHolders.length).to.be.equal(2);
+        expect(valuesHolders[0].location?.path).to.be.equal('test/values/global.json');
+        const vals0 = valuesHolders[0].values as any;
+        expect(vals0.rating).to.be.equal(5);
+        expect(valuesHolders[1].location?.path).to.be.equal('test/values/ply-ct.json');
+        const vals1 = valuesHolders[1].values as any;
+        expect(vals1.baseUrl).to.be.equal('https://ply-ct.org');
+    });
+
+    /**
+     * must have been cloned already (see above)
+     */
+    it('loads values from dir', async () => {
+        const gitHubAccess = new GitHubAccess(gitHubOptions);
+        const plyData = new PlyAccess(gitHubAccess, {
+            suiteSource: true,
+            logger: console
+        });
+
+        const plyBase = await plyData.getPlyBase();
+        expect(plyBase).to.be.equal('test');
+
+        const valuesHolders = await plyData.getFileValuesHolders();
+        expect(valuesHolders.length).to.be.equal(2);
+        expect(valuesHolders[0].location?.path).to.be.equal('test/values/global.json');
+        const vals0 = valuesHolders[0].values as any;
+        expect(vals0.year).to.be.equal(1931);
+        expect(valuesHolders[1].location?.path).to.be.equal('test/values/ply-ct.json');
+        const vals1 = valuesHolders[1].values as any;
+        expect(vals1.baseUrl).to.be.equal('https://ply-ct.org');
     });
 });
