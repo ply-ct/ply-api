@@ -8,10 +8,6 @@ export interface PlyDataOptions {
      */
     dir?: string;
     /**
-     * Git repository location
-     */
-    repoPath?: string;
-    /**
      * Ply config location
      */
     plyConfig?: string;

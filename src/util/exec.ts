@@ -28,10 +28,10 @@ export class CommandExecutor implements Executor {
         this.execFile = promisify(cpExecFile);
     }
 
-    async exec(cmd: string, options: ExecOptions): Promise<number> {
+    async exec(cmd: string, options: ExecOptions): Promise<string> {
         const opts: ExecOptions = { ...this.defaultOpts, ...(options || {}) };
         const res = await this.doRun(cmd, opts);
-        return typeof res === 'string' ? parseInt(res) : res;
+        return '' + res;
     }
 
     private async doRun(

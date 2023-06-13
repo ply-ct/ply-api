@@ -36,13 +36,13 @@ export class GitHubAccess implements FileAccess {
         }
     }
 
-    async exists(relPath: string): Promise<boolean> {
+    async exists(path: string): Promise<boolean> {
         const localRepo = this.options.localRepository;
         if (localRepo) {
             await this.cloneOrPull(localRepo);
-            return await localRepo.fileSystem.exists(relPath);
+            return await localRepo.fileSystem.exists(path);
         } else {
-            const response = await fetch(`${this.repository.apiUrl}/contents/${relPath}`, {
+            const response = await fetch(`${this.repository.apiUrl}/contents/${path}`, {
                 method: 'GET',
                 headers: {
                     ...(this.options.token && { Authorization: `Bearer ${this.options.token}` }),
@@ -71,7 +71,9 @@ export class GitHubAccess implements FileAccess {
                 msg
             );
         }
-        await this.runGit(`checkout ${this.repository.branch} --`, localRepo.dir);
+        if (this.repository.branch) {
+            await this.runGit(`checkout ${this.repository.branch} --`, localRepo.dir);
+        }
         this.clonedOrPulled = true;
     }
 
@@ -89,18 +91,18 @@ export class GitHubAccess implements FileAccess {
         this.repository.lastCommit = new Date(repoBranch.commit.commit.committer.date);
     }
 
-    async listFiles(relPath: string, options?: FileListOptions): Promise<string[]> {
+    async listFiles(path: string, options?: FileListOptions): Promise<string[]> {
         const localRepo = this.options.localRepository;
         if (localRepo) {
             await this.cloneOrPull(localRepo);
-            return await localRepo.fileSystem.listFiles(relPath, options);
+            return await localRepo.fileSystem.listFiles(path, options);
         } else {
             // TODO: one request? paginated?
             const filePaths: string[] = [];
             try {
-                const items = await this.doGet(`contents/${relPath}`);
+                const items = await this.doGet(`contents/${path}`);
                 if (!Array.isArray(items)) {
-                    throw new Error(`Expected 'array' instead of '${typeof items}': ${relPath}`);
+                    throw new Error(`Expected 'array' instead of '${typeof items}': ${path}`);
                 }
                 for (const item of items) {
                     if (item.type === 'file') {
@@ -120,14 +122,14 @@ export class GitHubAccess implements FileAccess {
         }
     }
 
-    async getFileList(relPath: string, options?: FileListOptions): Promise<FileList> {
+    async getFileList(path: string, options?: FileListOptions): Promise<FileList> {
         const localRepo = this.options.localRepository;
         if (localRepo) {
             await this.cloneOrPull(localRepo);
-            return await localRepo.fileSystem.getFileList(relPath, options);
+            return await localRepo.fileSystem.getFileList(path, options);
         } else {
             const fileList: FileList = {};
-            const filePaths = await this.listFiles(relPath, options);
+            const filePaths = await this.listFiles(path, options);
             for (const filePath of filePaths) {
                 const content = await this.getTextFileContent(filePath);
                 if (content) {
@@ -138,40 +140,39 @@ export class GitHubAccess implements FileAccess {
         }
     }
 
-    async readTextFile(relPath: string): Promise<string | undefined> {
+    async readTextFile(path: string): Promise<string | undefined> {
         const localRepo = this.options.localRepository;
         if (localRepo) {
             await this.cloneOrPull(localRepo);
-            const file = `${localRepo.dir}/${relPath}`;
-            if (await localRepo.fileSystem.exists(file)) {
-                return await localRepo.fileSystem.readTextFile(file);
+            if (await localRepo.fileSystem.exists(path)) {
+                return await localRepo.fileSystem.readTextFile(path);
             }
         } else {
             try {
-                return await this.getTextFileContent(relPath);
+                return await this.getTextFileContent(path);
             } catch (err: any) {
                 if (err.status !== 404) throw err;
             }
         }
     }
 
-    async getTextFileContent(relPath: string): Promise<string | undefined> {
+    async getTextFileContent(path: string): Promise<string | undefined> {
         const localRepo = this.options.localRepository;
         if (localRepo) {
             await this.cloneOrPull(localRepo);
-            const file = `${localRepo.dir}/${relPath}`;
+            const file = `${localRepo.dir}/${path}`;
             return await localRepo.fileSystem.readTextFile(file);
         } else {
-            const file = await this.doGet(`contents/${relPath}`);
+            const file = await this.doGet(`contents/${path}`);
             if (typeof file !== 'object') {
-                throw new Error(`Expected 'object' instead of '${typeof file}': ${relPath}`);
+                throw new Error(`Expected 'object' instead of '${typeof file}': ${path}`);
             }
             if (file.type !== 'file') {
-                throw new Error(`Unexpected response type '${file.type}': ${relPath}`);
+                throw new Error(`Unexpected response type '${file.type}': ${path}`);
             }
 
             if (file.encoding === 'none') {
-                this.options.logger.error(`Cannot download large file: ${relPath}`);
+                this.options.logger.error(`Cannot download large file: ${path}`);
                 return '';
             }
 
@@ -179,7 +180,7 @@ export class GitHubAccess implements FileAccess {
         }
     }
 
-    async runGit(cmd: string, cwd: string, msg?: string): Promise<number> {
+    async runGit(cmd: string, cwd: string, msg?: string): Promise<string> {
         if (this.options.localRepository) {
             return await this.options.localRepository.executor.exec(`git ${cmd}`, {
                 cwd,

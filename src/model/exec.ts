@@ -8,5 +8,5 @@ export interface ExecOptions {
 }
 
 export interface Executor {
-    exec(cmd: string, options: ExecOptions): Promise<number>;
+    exec(cmd: string, options: ExecOptions): Promise<string>;
 }

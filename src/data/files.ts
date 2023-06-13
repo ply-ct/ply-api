@@ -18,8 +18,8 @@ export class FileSystemAccess implements FileAccess {
         return existsSync(filePath);
     }
 
-    async listFiles(relPath: string, options?: FileListOptions | undefined): Promise<string[]> {
-        const dirPath = `${this.base}/${relPath}`;
+    async listFiles(path: string, options?: FileListOptions | undefined): Promise<string[]> {
+        const dirPath = `${this.base}/${path}`;
         const filePaths: string[] = [];
         if (existsSync(dirPath)) {
             let items: string[];
@@ -29,28 +29,28 @@ export class FileSystemAccess implements FileAccess {
                 throw new Error(`Error reading dir: 'dirPath': ${err.message}`);
             }
             for (const item of items) {
-                const path = `${relPath}/${item}`;
+                const filePath = `${path}/${item}`;
                 let stats: Stats;
                 try {
-                    stats = await fs.stat(`${this.base}/${path}`);
+                    stats = await fs.stat(`${this.base}/${filePath}`);
                 } catch (err: any) {
-                    throw new Error(`Error getting file stats for '${path}': ${err.message}`);
+                    throw new Error(`Error getting file stats for '${filePath}': ${err.message}`);
                 }
                 if (stats.isFile()) {
-                    if (!options?.patterns || this.isMatch(path, options.patterns)) {
-                        filePaths.push(path);
+                    if (!options?.patterns || this.isMatch(filePath, options.patterns)) {
+                        filePaths.push(filePath);
                     }
                 } else if (stats.isDirectory() && options?.recursive) {
-                    filePaths.push(...(await this.listFiles(path, options)));
+                    filePaths.push(...(await this.listFiles(filePath, options)));
                 }
             }
         }
         return filePaths;
     }
 
-    async getFileList(relPath: string, options?: FileListOptions | undefined): Promise<FileList> {
+    async getFileList(path: string, options?: FileListOptions | undefined): Promise<FileList> {
         const fileList: FileList = {};
-        const filePaths = await this.listFiles(relPath, options);
+        const filePaths = await this.listFiles(path, options);
         for (const filePath of filePaths) {
             fileList[filePath] = await this.readFile(`${this.base}/${filePath}`);
         }

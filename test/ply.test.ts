@@ -35,7 +35,7 @@ describe('ply', () => {
     });
 
     it('loads request suite from cloned', async () => {
-        const gitFileAccess = new FileSystemAccess('.');
+        const gitFileAccess = new FileSystemAccess('.git-repos/ply-demo');
         const fileAccess = new GitHubAccess({
             ...githubOptions,
             localRepository: {
@@ -45,7 +45,6 @@ describe('ply', () => {
             }
         });
         const plyData = new PlyAccess(fileAccess, {
-            repoPath: '.git-repos/ply-demo',
             suiteSource: true,
             logger: console
         });
@@ -117,7 +116,6 @@ describe('ply', () => {
             }
         });
         const plyData = new PlyAccess(fileAccess, {
-            repoPath: '.git-repos/ply-demo',
             suiteSource: true,
             logger: console
         });
