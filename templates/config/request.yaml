@@ -1,0 +1,34 @@
+Request:
+  widgets:
+    - type: text
+      attribute: url
+      label: URL
+    - type: select
+      attribute: method
+      label: Method
+      options:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+      default: GET
+    - type: checkbox
+      attribute: submit
+      label: Submit Only
+
+Headers:
+  widgets:
+    - type: table
+      attribute: headers # no label means fill entire tab
+      widgets: # table widgets don't specify attribute
+        - type: text
+          label: Name
+        - type: text
+          label: Value
+
+Body:
+  widgets:
+    - type: textarea
+      attribute: body
+      label: Body content

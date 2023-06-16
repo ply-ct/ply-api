@@ -1,0 +1,19 @@
+Options:
+  widgets:
+    - type: checkbox
+      attribute: bail
+      label: Bail on first failure
+
+Values:
+  widgets:
+    - type: table
+      attribute: values
+      widgets:
+        - type: text
+          label: Name
+        - type: text
+          label: Value
+        - type: checkbox
+          label: Required
+        - type: text
+          label: Required If

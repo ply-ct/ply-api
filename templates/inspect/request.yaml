@@ -1,0 +1,22 @@
+# inpect template for "Request" instance
+Step:
+  widgets:
+    - type: text
+      instanceProp: status
+      label: Status
+    - type: datetime
+      instanceProp: start
+      label: Start
+    - type: datetime
+      instanceProp: end
+      label: End
+
+Request:
+  widgets:
+    - type: textarea
+      instanceProp: request
+
+Response:
+  widgets:
+    - type: textarea
+      instanceProp: response

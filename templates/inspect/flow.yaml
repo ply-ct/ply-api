@@ -1,0 +1,5 @@
+Flow:
+  widgets:
+    - type: text
+      instanceProp: status
+      label: Status
