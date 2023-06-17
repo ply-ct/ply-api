@@ -1,4 +1,4 @@
-import path from 'path-browserify';
+import { relative } from 'path-browserify';
 import { PlyDataOptions } from '../../model/data';
 import { FileAccess } from '../../model/files';
 import * as yaml from '../../util/yaml';
@@ -33,6 +33,9 @@ export class FlowLoader {
         }
     }
 
+    /**
+     * @param relPath must be relative since path-browserify doesn't support windows
+     */
     private readPlyFlow(plyBase: string, relPath: string, contents: string): Flow {
         const flow = yaml.load(relPath, contents) as Flow;
         if (!flow) {
@@ -40,7 +43,7 @@ export class FlowLoader {
         }
         flow.steps?.forEach((step) => (step.name = step.name.replace(/\r?\n/g, ' ')));
         const plyFlow: Flow = {
-            name: path.relative(plyBase, relPath),
+            name: relative(plyBase, relPath),
             path: relPath,
             steps: flow.steps || []
         };

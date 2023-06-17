@@ -1,4 +1,4 @@
-import * as jsYaml from 'js-yaml';
+import { load as loadYaml } from 'js-yaml';
 import fetch from 'cross-fetch';
 import { plyApiVersion } from '../version';
 import { Logger } from '../model/log';
@@ -11,7 +11,7 @@ export interface ContentOptions {
 /**
  * Reads an object from json or yaml content
  */
-export const loadContent = (content: string, filename?: string): object => {
+export const loadContent = (content: string, filename?: string): any => {
     if (isJson(content, filename)) {
         try {
             return JSON.parse(content);
@@ -22,7 +22,7 @@ export const loadContent = (content: string, filename?: string): object => {
             throw err;
         }
     } else {
-        return jsYaml.load(content, { filename }) as object;
+        return loadYaml(content, { filename });
     }
 };
 

@@ -5,6 +5,7 @@ import { GitHubAccess } from '../src/data/github';
 import { GitHubOptions } from '../src/model/github';
 import { FileSystemAccess } from '../src/data/files';
 import { CommandExecutor } from '../src/util/exec';
+import { ConfigTemplate, DescriptorLoadOptions } from '../src/model/descriptor';
 
 describe('ply', () => {
     const gitHubOptions: GitHubOptions = {
@@ -144,11 +145,8 @@ describe('ply', () => {
     });
 
     it('loads values through github api', async () => {
-        const fileAccess = new FileSystemAccess('.git-repos/ply-demo');
-        const plyData = new PlyAccess(fileAccess, {
-            dir: '.git-repos/ply-demo',
-            logger: console
-        });
+        const gitHubAccess = new GitHubAccess(gitHubOptions);
+        const plyData = new PlyAccess(gitHubAccess);
 
         const plyBase = await plyData.getPlyBase();
         expect(plyBase).to.be.equal('test');
@@ -167,9 +165,9 @@ describe('ply', () => {
      * must have been cloned already (see above)
      */
     it('loads values from dir', async () => {
-        const gitHubAccess = new GitHubAccess(gitHubOptions);
-        const plyData = new PlyAccess(gitHubAccess, {
-            suiteSource: true,
+        const fileAccess = new FileSystemAccess('.git-repos/ply-demo');
+        const plyData = new PlyAccess(fileAccess, {
+            dir: '.git-repos/ply-demo',
             logger: console
         });
 
@@ -184,5 +182,58 @@ describe('ply', () => {
         expect(valuesHolders[1].location?.path).to.be.equal('test/values/ply-ct.json');
         const vals1 = valuesHolders[1].values as any;
         expect(vals1.baseUrl).to.be.equal('https://ply-ct.org');
+    });
+
+    it('loads standard descriptors', async () => {
+        const fileAccess = new FileSystemAccess('.');
+        const plyData = new PlyAccess(fileAccess, {
+            logger: console
+        });
+        const options: DescriptorLoadOptions = {
+            path: 'templates/descriptors.yaml',
+            inlineSvg: true,
+            templateBase: 'templates/config',
+            withRuntime: true,
+            runtimeTemplateBase: 'templates/inspect',
+            iconBase: 'public/img/icons'
+        };
+
+        const descriptors = await plyData.getStandardDescriptors(options);
+        const requestDescriptor = descriptors.find((d) => d.path === 'request');
+        assert.ok(requestDescriptor);
+        expect(requestDescriptor.path).to.be.equal('request');
+        expect(requestDescriptor.name).to.be.equal('Request');
+        expect(requestDescriptor.type).to.be.equal('step');
+        expect(typeof requestDescriptor.icon).to.be.equal('string');
+        expect(('' + requestDescriptor.icon).startsWith('<')).to.be.true;
+        const template = requestDescriptor.template;
+        assert.ok(template);
+        const reqWidgets = (template as ConfigTemplate).Request?.widgets;
+        expect(reqWidgets[0].type).to.be.equal('text');
+        expect(reqWidgets[0].attribute).to.be.equal('url');
+        expect(reqWidgets[0].label).to.be.equal('URL');
+    });
+
+    it('loads custom descriptors', async () => {
+        const gitHubAccess = new GitHubAccess(gitHubOptions);
+        const plyData = new PlyAccess(gitHubAccess);
+        const options: DescriptorLoadOptions = {
+            path: 'custom/steps',
+            inlineSvg: true
+        };
+
+        const descriptors = await plyData.getCustomDescriptors(options);
+        expect(descriptors.length).to.be.equal(1);
+        const tmdbDescriptor = descriptors[0];
+        expect(tmdbDescriptor.path).to.be.equal('src/tmdb.ts');
+        expect(tmdbDescriptor.type).to.be.equal('step');
+        expect(tmdbDescriptor.name).to.be.equal('The Movie DB');
+        expect(('' + tmdbDescriptor.icon).startsWith('<?xml ')).to.be.true;
+        const template = tmdbDescriptor.template;
+        assert.ok(template);
+        const widgets = (template as ConfigTemplate).Movies?.widgets;
+        expect(widgets[0].type).to.be.equal('text');
+        expect(widgets[0].attribute).to.be.equal('year');
+        expect(widgets[0].label).to.be.equal('Year');
     });
 });

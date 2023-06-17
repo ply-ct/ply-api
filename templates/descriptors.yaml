@@ -1,0 +1,41 @@
+# standard descriptors - obj name is path
+
+start:
+  name: Start
+  type: step
+  icon: shape:start
+
+stop:
+  name: Stop
+  type: step
+  icon: shape:stop
+
+subflow:
+  name: Subflow
+  type: subflow
+  icon: embedded.png
+
+note:
+  name: Note
+  type: note
+  icon: note.svg
+
+request:
+  name: Request
+  type: step
+  icon: request.svg
+
+typescript:
+  name: TypeScript
+  type: step
+  icon: typescript.svg
+
+decide:
+  name: Decide
+  type: step
+  icon: shape:decision
+
+delay:
+  name: Delay
+  type: step
+  icon: delay.svg

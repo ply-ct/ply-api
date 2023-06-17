@@ -1,6 +1,7 @@
 export * from './event';
 export * from './version';
 export * from './model/data';
+export * from './model/descriptor';
 export * from './model/disposable';
 export * from './model/event';
 export * from './model/files';

@@ -1,5 +1,5 @@
 import { promises as fs, existsSync, Stats } from 'fs';
-import { normalize, isAbsolute } from 'path-browserify';
+import { normalize, isAbsolute } from 'path';
 import { minimatch } from 'minimatch';
 import { FileAccess, FileListOptions, FileList } from '../model/files';
 

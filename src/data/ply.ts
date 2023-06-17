@@ -11,6 +11,8 @@ import { RequestLoader } from './ply-load/requests';
 import { FlowLoader } from './ply-load/flows';
 import { ExpectedResultsLoader } from './ply-load/expected';
 import { ValuesLoader } from './ply-load/values';
+import { Descriptor, DescriptorLoadOptions } from '../model/descriptor';
+import { DescriptorsLoader } from './ply-load/descriptors';
 
 export class PlyAccess {
     readonly options: PlyDataOptions;
@@ -58,9 +60,12 @@ export class PlyAccess {
         };
     }
 
-    public async getRequestSuite(path: string): Promise<RequestSuite | undefined> {
+    /**
+     * @param relPath must be relative since path-browserify doesn't support windows
+     */
+    public async getRequestSuite(relPath: string): Promise<RequestSuite | undefined> {
         const loader = new RequestLoader(this.files, this.options);
-        return await loader.loadRequestSuite(await this.getPlyBase(), path);
+        return await loader.loadRequestSuite(await this.getPlyBase(), relPath);
     }
 
     private plyRequests?: RequestSuite[];
@@ -72,9 +77,12 @@ export class PlyAccess {
         return this.plyRequests;
     }
 
-    async getPlyFlow(path: string): Promise<Flow | undefined> {
+    /**
+     * @param relPath must be relative since path-browserify doesn't support windows
+     */
+    async getPlyFlow(relPath: string): Promise<Flow | undefined> {
         const loader = new FlowLoader(this.files, this.options);
-        return await loader.loadPlyFlow(await this.getPlyBase(), path);
+        return await loader.loadPlyFlow(await this.getPlyBase(), relPath);
     }
 
     private plyFlows?: Flow[];
@@ -137,5 +145,29 @@ export class PlyAccess {
     public getFlowValues(flow: Flow, evalContext?: object): ValuesHolder {
         const loader = new ValuesLoader(this.files, this.valuesOptions);
         return loader.readFlowValues(flow, evalContext);
+    }
+
+    private standardDescriptors?: Descriptor[];
+    public async getStandardDescriptors(options: DescriptorLoadOptions): Promise<Descriptor[]> {
+        if (!this.standardDescriptors) {
+            if (!options.logger) {
+                options = { ...options, logger: this.options.logger };
+            }
+            const loader = new DescriptorsLoader(this.files, options);
+            this.standardDescriptors = await loader.loadStandardDescriptors();
+        }
+        return this.standardDescriptors;
+    }
+
+    private customDescriptors?: Descriptor[];
+    public async getCustomDescriptors(options: DescriptorLoadOptions): Promise<Descriptor[]> {
+        if (!this.customDescriptors) {
+            if (!options.logger) {
+                options = { ...options, logger: this.options.logger };
+            }
+            const loader = new DescriptorsLoader(this.files, options);
+            this.customDescriptors = await loader.loadCustomDescriptors();
+        }
+        return this.customDescriptors;
     }
 }
