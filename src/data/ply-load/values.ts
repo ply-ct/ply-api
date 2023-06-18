@@ -109,8 +109,8 @@ export class ValuesLoader {
                 if (row.length > 0) {
                     const valName = row[0];
                     let valVal: string | undefined;
-                    if (row.length > 1 && rows[1]) {
-                        valVal = rows[1];
+                    if (row.length > 1 && row[1]) {
+                        valVal = row[1];
                         if (isExpression(valVal!)) {
                             valVal = resolveIf(valVal!, context, trusted);
                         }

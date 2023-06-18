@@ -45,6 +45,7 @@ export class FlowLoader {
         const plyFlow: Flow = {
             name: relative(plyBase, relPath),
             path: relPath,
+            attributes: flow.attributes,
             steps: flow.steps || []
         };
         if (flow.subflows) {

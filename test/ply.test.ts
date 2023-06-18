@@ -184,6 +184,23 @@ describe('ply', () => {
         expect(vals1.baseUrl).to.be.equal('https://ply-ct.org');
     });
 
+    /**
+     * must have been cloned already (see above)
+     */
+    it('loads flow values', async () => {
+        const fileAccess = new FileSystemAccess('.git-repos/ply-demo');
+        const plyData = new PlyAccess(fileAccess, {
+            dir: '.git-repos/ply-demo',
+            logger: console
+        });
+
+        const flow = await plyData.getPlyFlow('test/flows/get-movies.ply.flow');
+        assert.ok(flow);
+        const flowVals = plyData.getFlowValues(flow);
+        expect((flowVals.values as any).title).to.be.equal('Dracula');
+        expect(flowVals.location?.path).to.be.equal('test/flows/get-movies.ply.flow');
+    });
+
     it('loads standard descriptors', async () => {
         const fileAccess = new FileSystemAccess('.');
         const plyData = new PlyAccess(fileAccess, {
