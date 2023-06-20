@@ -11,7 +11,12 @@ import { RequestLoader } from './ply-load/requests';
 import { FlowLoader } from './ply-load/flows';
 import { ExpectedResultsLoader } from './ply-load/expected';
 import { ValuesLoader } from './ply-load/values';
-import { Descriptor, DescriptorLoadOptions } from '../model/descriptor';
+import {
+    Descriptor,
+    DescriptorLoadOptions,
+    customDescriptorDefaults,
+    standardDescriptorDefaults
+} from '../model/descriptor';
 import { DescriptorsLoader } from './ply-load/descriptors';
 
 export class PlyAccess {
@@ -148,24 +153,28 @@ export class PlyAccess {
     }
 
     private standardDescriptors?: Descriptor[];
-    public async getStandardDescriptors(options: DescriptorLoadOptions): Promise<Descriptor[]> {
+    public async getStandardDescriptors(
+        options: DescriptorLoadOptions = {}
+    ): Promise<Descriptor[]> {
         if (!this.standardDescriptors) {
-            if (!options.logger) {
-                options = { ...options, logger: this.options.logger };
+            let opts = { ...standardDescriptorDefaults, ...options };
+            if (!opts.logger) {
+                opts = { ...opts, logger: this.options.logger };
             }
-            const loader = new DescriptorsLoader(this.files, options);
+            const loader = new DescriptorsLoader(this.files, opts);
             this.standardDescriptors = await loader.loadStandardDescriptors();
         }
         return this.standardDescriptors;
     }
 
     private customDescriptors?: Descriptor[];
-    public async getCustomDescriptors(options: DescriptorLoadOptions): Promise<Descriptor[]> {
+    public async getCustomDescriptors(options: DescriptorLoadOptions = {}): Promise<Descriptor[]> {
         if (!this.customDescriptors) {
-            if (!options.logger) {
-                options = { ...options, logger: this.options.logger };
+            let opts = { ...customDescriptorDefaults, ...options };
+            if (!opts.logger) {
+                opts = { ...opts, logger: this.options.logger };
             }
-            const loader = new DescriptorsLoader(this.files, options);
+            const loader = new DescriptorsLoader(this.files, opts);
             this.customDescriptors = await loader.loadCustomDescriptors();
         }
         return this.customDescriptors;

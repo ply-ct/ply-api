@@ -2,14 +2,26 @@ import { Logger } from './log';
 
 export interface DescriptorLoadOptions {
     path?: string;
-    inlineSvg?: boolean;
     templateBase?: string;
     withRuntime?: boolean;
     runtimeTemplateBase?: string;
     iconBase?: string;
     iconTheme?: 'light' | 'dark';
+    inlineSvg?: boolean;
     logger?: Logger;
 }
+
+const nodePath = 'node_modules/@ply-ct/ply-api';
+export const standardDescriptorDefaults: DescriptorLoadOptions = {
+    path: `${nodePath}/templates/descriptors.yaml`,
+    templateBase: `${nodePath}/templates/config`,
+    runtimeTemplateBase: `${nodePath}/templates/inspect`,
+    iconBase: `${nodePath}/public/img/icons`,
+    iconTheme: 'light'
+};
+export const customDescriptorDefaults: DescriptorLoadOptions = {
+    // ain't none
+};
 
 export type DescriptorType = 'step' | 'subflow' | 'note';
 

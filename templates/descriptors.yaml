@@ -13,7 +13,7 @@ stop:
 subflow:
   name: Subflow
   type: subflow
-  icon: embedded.png
+  icon: embedded.svg
 
 note:
   name: Note
