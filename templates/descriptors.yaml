@@ -1,5 +1,9 @@
 # standard descriptors - obj name is path
 
+flow:
+  name: Flow
+  type: flow
+
 start:
   name: Start
   type: step

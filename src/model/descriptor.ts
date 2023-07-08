@@ -23,7 +23,7 @@ export const customDescriptorDefaults: DescriptorLoadOptions = {
     // ain't none
 };
 
-export type DescriptorType = 'step' | 'subflow' | 'note';
+export type DescriptorType = 'flow' | 'step' | 'subflow' | 'note';
 
 export interface Descriptor {
     path: string;

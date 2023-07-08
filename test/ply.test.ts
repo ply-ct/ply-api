@@ -201,7 +201,7 @@ describe('ply', () => {
         expect(flowVals.location?.path).to.be.equal('test/flows/get-movies.ply.flow');
     });
 
-    it('loads standard descriptors', async () => {
+    it('loads standard descriptors with runtime', async () => {
         const fileAccess = new FileSystemAccess('.');
         const plyData = new PlyAccess(fileAccess, {
             logger: console
@@ -216,6 +216,15 @@ describe('ply', () => {
         };
 
         const descriptors = await plyData.getStandardDescriptors(options);
+
+        // flow
+        const flowDescriptor = descriptors.find((d) => d.path === 'flow');
+        assert.ok(flowDescriptor);
+        expect(flowDescriptor.path).to.be.equal('flow');
+        expect(flowDescriptor.name).to.be.equal('Flow');
+        expect(flowDescriptor.type).to.be.equal('flow');
+
+        // request step
         const requestDescriptor = descriptors.find((d) => d.path === 'request');
         assert.ok(requestDescriptor);
         expect(requestDescriptor.path).to.be.equal('request');
