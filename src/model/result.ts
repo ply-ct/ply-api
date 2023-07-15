@@ -24,7 +24,7 @@ export interface ApiExpectedResults {
 export type ResultStatus = 'Pending' | 'Running' | 'Passed' | 'Failed' | 'Errored' | 'Submitted';
 
 export interface Outcome {
-    name: string;
+    name?: string;
     /**
      * Status of test execution
      */
