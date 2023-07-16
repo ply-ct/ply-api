@@ -112,7 +112,7 @@ export class ValuesLoader {
                     if (row.length > 1 && row[1]) {
                         valVal = row[1];
                         if (isExpression(valVal!)) {
-                            valVal = resolveIf(valVal!, context, trusted);
+                            valVal = resolveIf(valVal!, context, trusted, this.options.logger);
                         }
                         if (row.length > 2) {
                             let reqd = row[2] === 'true';
@@ -120,7 +120,9 @@ export class ValuesLoader {
                                 let expr = row[3];
                                 if (expr) {
                                     if (!isExpression(expr)) expr = toExpression(expr);
-                                    reqd = resolveIf(expr, context, trusted) === 'true';
+                                    reqd =
+                                        resolveIf(expr, context, trusted, this.options.logger) ===
+                                        'true';
                                 }
                             }
                             if (reqd) required.push(valName);
