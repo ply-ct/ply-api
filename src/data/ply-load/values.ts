@@ -80,7 +80,14 @@ export class ValuesLoader {
         } catch (err: unknown) {
             this.options.logger.error(`Cannot process results: ${actualResults.path}`, err);
         }
-        return { values: resultVals, location: { path: actualResults.path } };
+        if (this.options.refHolder) {
+            return {
+                values: { [this.options.refHolder]: resultVals },
+                location: { path: actualResults.path }
+            };
+        } else {
+            return { values: resultVals, location: { path: actualResults.path } };
+        }
     }
 
     private readResult(obj: any) {
