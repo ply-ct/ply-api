@@ -13,6 +13,7 @@ export interface PlyResponse {
     status: Status;
     headers: { [key: string]: string };
     body?: any;
+    time?: number;
 }
 
 export interface Status {
