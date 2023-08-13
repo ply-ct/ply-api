@@ -1,17 +1,16 @@
 import fetch from 'cross-fetch';
 import { Repository, GitHubOptions, LocalRepository } from '../model/github';
-import { FileListOptions, FileList, FileAccess } from '../model/files';
+import { FileListOptions, FileList, FileAccess, DirOptions } from '../model/files';
 import { StatusError } from '../model/request';
 import { plyApiVersion } from '../version';
 import { isMatch } from '../util/match';
 
-// TODO shallow clone
 export class GitHubAccess implements FileAccess {
     static readonly graphQlUrl = 'https://api.github.com/graphql';
 
     readonly repository: Repository;
     private authUrl?: URL;
-    private clonedOrPulled = false;
+    private pulledBranch?: string;
 
     constructor(readonly options: GitHubOptions) {
         // https://github.com/ply-ct/ply-demo
@@ -39,7 +38,7 @@ export class GitHubAccess implements FileAccess {
     async exists(path: string): Promise<boolean> {
         const localRepo = this.options.localRepository;
         if (localRepo) {
-            await this.cloneOrPull(localRepo);
+            await this.pullBranch(localRepo);
             return await localRepo.fileSystem.exists(path);
         } else {
             const response = await fetch(`${this.repository.apiUrl}/contents/${path}`, {
@@ -53,28 +52,46 @@ export class GitHubAccess implements FileAccess {
         }
     }
 
-    async cloneOrPull(localRepo: LocalRepository) {
-        if (this.clonedOrPulled) return;
-        if (await localRepo.fileSystem.exists(localRepo.dir)) {
-            // pull
-            await this.runGit('pull', localRepo.dir);
-        } else {
-            // clone
-            let msg: string | undefined;
-            if (this.authUrl) {
-                const safeUrl = `${this.authUrl.protocol}//${this.authUrl.username}:********@${this.authUrl.host}${this.authUrl.pathname}`;
-                msg = `Running: 'clone ${safeUrl} ${localRepo.dir}'`;
-            }
-            await this.runGit(
-                `clone ${this.authUrl || this.options.url} ${localRepo.dir}`,
-                '.',
-                msg
-            );
+    async createDir(_path: string, _options?: DirOptions) {
+        throw new Error('createDir not supported for GitHub remote');
+    }
+
+    async deleteDir(_path: string, _options?: DirOptions | undefined) {
+        throw new Error('dirDir not supported for GitHub remote');
+    }
+
+    async pullBranch(localRepo: LocalRepository) {
+        if (!this.repository.branch) {
+            throw new Error(`No branch specified: ${this.repository.url}`);
         }
-        if (this.repository.branch) {
-            await this.runGit(`checkout ${this.repository.branch} --`, localRepo.dir);
+        if (this.pulledBranch === this.repository.branch) return;
+
+        this.pulledBranch = this.repository.branch;
+
+        let repoExists = await localRepo.fileSystem.exists('.');
+        if (repoExists && this.repository.branch !== (await this.getCurrentBranch(localRepo.dir))) {
+            // remove and re-pull
+            await localRepo.fileSystem.deleteDir('.', { recursive: true });
+            repoExists = false;
         }
-        this.clonedOrPulled = true;
+
+        if (!repoExists) {
+            await localRepo.fileSystem.createDir('.', { recursive: true });
+            await this.runGit(`init -b ${this.pulledBranch}`, localRepo.dir);
+        }
+
+        let msg: string | undefined;
+        if (this.authUrl) {
+            const safeUrl = `${this.authUrl.protocol}//${this.authUrl.username}:********@${this.authUrl.host}${this.authUrl.pathname}`;
+            msg = `Running: 'git pull ${safeUrl} ${this.pulledBranch}' (in directory ${localRepo.dir})`;
+        }
+
+        const pullUrl = this.authUrl || this.options.url;
+        await this.runGit(`pull ${pullUrl} ${this.pulledBranch}`, localRepo.dir, msg);
+    }
+
+    async getCurrentBranch(repoDir: string): Promise<string> {
+        return (await this.runGit('branch --show-current', repoDir)).trim();
     }
 
     /**
@@ -94,7 +111,7 @@ export class GitHubAccess implements FileAccess {
     async listFiles(path: string, options?: FileListOptions): Promise<string[]> {
         const localRepo = this.options.localRepository;
         if (localRepo) {
-            await this.cloneOrPull(localRepo);
+            await this.pullBranch(localRepo);
             return await localRepo.fileSystem.listFiles(path, options);
         } else {
             // TODO: one request? paginated?
@@ -125,7 +142,7 @@ export class GitHubAccess implements FileAccess {
     async getFileList(path: string, options?: FileListOptions): Promise<FileList> {
         const localRepo = this.options.localRepository;
         if (localRepo) {
-            await this.cloneOrPull(localRepo);
+            await this.pullBranch(localRepo);
             return await localRepo.fileSystem.getFileList(path, options);
         } else {
             const fileList: FileList = {};
@@ -143,7 +160,7 @@ export class GitHubAccess implements FileAccess {
     async readTextFile(path: string): Promise<string | undefined> {
         const localRepo = this.options.localRepository;
         if (localRepo) {
-            await this.cloneOrPull(localRepo);
+            await this.pullBranch(localRepo);
             if (await localRepo.fileSystem.exists(path)) {
                 return await localRepo.fileSystem.readTextFile(path);
             }
@@ -159,7 +176,7 @@ export class GitHubAccess implements FileAccess {
     async getTextFileContent(path: string): Promise<string | undefined> {
         const localRepo = this.options.localRepository;
         if (localRepo) {
-            await this.cloneOrPull(localRepo);
+            await this.pullBranch(localRepo);
             const file = `${localRepo.dir}/${path}`;
             return await localRepo.fileSystem.readTextFile(file);
         } else {

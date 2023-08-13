@@ -1,7 +1,7 @@
 import { promises as fs, existsSync, Stats } from 'fs';
 import { normalize, isAbsolute } from 'path';
 import { minimatch } from 'minimatch';
-import { FileAccess, FileListOptions, FileList } from '../model/files';
+import { FileAccess, FileListOptions, FileList, DirOptions } from '../model/files';
 
 export class FileSystemAccess implements FileAccess {
     readonly base: string;
@@ -14,12 +14,22 @@ export class FileSystemAccess implements FileAccess {
 
     async exists(path: string): Promise<boolean> {
         // path is absolute for values files
-        const filePath = isAbsolute(path) ? path : `${this.base}/${path}`;
-        return existsSync(filePath);
+        const fsPath = this.getPath(path);
+        return existsSync(fsPath);
+    }
+
+    async createDir(path: string, options?: DirOptions | undefined) {
+        const dirPath = this.getPath(path);
+        await fs.mkdir(dirPath, options);
+    }
+
+    async deleteDir(path: string, options?: DirOptions | undefined) {
+        const dirPath = this.getPath(path);
+        await fs.rm(dirPath, options);
     }
 
     async listFiles(path: string, options?: FileListOptions | undefined): Promise<string[]> {
-        const dirPath = `${this.base}/${path}`;
+        const dirPath = this.getPath(path);
         const filePaths: string[] = [];
         if (existsSync(dirPath)) {
             let items: string[];
@@ -68,7 +78,7 @@ export class FileSystemAccess implements FileAccess {
     /**
      * Match against glob patterns
      */
-    isMatch(path: string, patterns: string[]): boolean {
+    private isMatch(path: string, patterns: string[]): boolean {
         for (const pattern of patterns) {
             if (minimatch(normalize(path), pattern, { dot: true })) {
                 return true;
@@ -80,11 +90,15 @@ export class FileSystemAccess implements FileAccess {
     /**
      * Catches errors to provide a meaningful stack
      */
-    async readFile(file: string): Promise<string> {
+    private async readFile(file: string): Promise<string> {
         try {
             return await fs.readFile(file, { encoding: 'utf-8' });
         } catch (err: any) {
             throw new Error(`Error reading file '${file}': ${err.message}`);
         }
+    }
+
+    private getPath(path: string): string {
+        return isAbsolute(path) ? path : path === '.' ? this.base : `${this.base}/${path}`;
     }
 }

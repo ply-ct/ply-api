@@ -66,7 +66,7 @@ export class PlyAccess {
     }
 
     /**
-     * @param relPath must be relative since path-browserify doesn't support windows
+     * @param relPath must be relative
      */
     public async getRequestSuite(relPath: string): Promise<RequestSuite | undefined> {
         const loader = new RequestLoader(this.files, this.options);
@@ -83,7 +83,7 @@ export class PlyAccess {
     }
 
     /**
-     * @param relPath must be relative since path-browserify doesn't support windows
+     * @param relPath must be relative
      */
     async getPlyFlow(relPath: string): Promise<Flow | undefined> {
         const loader = new FlowLoader(this.files, this.options);

@@ -1,4 +1,3 @@
-import { relative } from 'path-browserify';
 import { PlyDataOptions } from '../../model/data';
 import { FileAccess } from '../../model/files';
 import { PlyRequest } from '../../model/request';
@@ -38,7 +37,7 @@ export class RequestLoader {
     }
 
     /**
-     * @param relPath must be relative since path-browserify doesn't support windows
+     * @param relPath must be relative
      */
     private readRequestSuite(plyBase: string, relPath: string, contents: string): RequestSuite {
         const requestsObj = yaml.load(relPath, contents, true) as {
@@ -51,7 +50,7 @@ export class RequestLoader {
             return { ...requestsObj[name], name };
         });
         const requestSuite: RequestSuite = {
-            name: relative(plyBase, relPath),
+            name: plyBase === '.' ? relPath : relPath.substring(plyBase.length + 1),
             path: relPath,
             requests
         };

@@ -4,10 +4,6 @@ import { Logger } from './log';
 
 export interface PlyDataOptions {
     /**
-     * File system directory
-     */
-    dir?: string;
-    /**
      * Ply config location
      */
     plyConfig?: string;

@@ -61,3 +61,36 @@ export interface RunResult {
     status: ResultStatus;
     message?: string;
 }
+
+export interface OverallResults {
+    Passed: number;
+    Failed: number;
+    Errored: number;
+    Pending: number;
+    Submitted: number;
+}
+
+export interface PlyResults {
+    overall: OverallResults;
+    runs: SuiteRun[];
+}
+
+export interface SuiteRun {
+    suite: string;
+    run: number;
+    result: RunResult;
+    start?: Date;
+    end?: Date;
+    testRuns: TestRun[];
+}
+
+export interface TestRun {
+    name: string;
+    test: string;
+    type: 'request' | 'flow';
+    start?: Date;
+    end?: Date;
+    result: RunResult;
+    request?: PlyRequest;
+    response?: PlyResponse;
+}

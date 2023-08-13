@@ -35,6 +35,9 @@ export interface Repository {
 
 export interface LocalRepository {
     dir: string;
+    /**
+     * fs base should be repository path
+     */
     fileSystem: FileAccess;
     executor: Executor;
 }

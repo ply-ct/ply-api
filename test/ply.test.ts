@@ -45,6 +45,7 @@ describe('ply', () => {
                 executor: new CommandExecutor()
             }
         });
+        await gitHubAccess.init();
         const plyData = new PlyAccess(gitHubAccess, {
             suiteSource: true,
             logger: console
@@ -61,15 +62,43 @@ describe('ply', () => {
         expect(requestSuite.requests.length).to.be.equal(5);
     });
 
+    it('handles cloned branch switch', async () => {
+        // different branch from above
+        const repoDir = '.git-repos/ply-demo';
+        const fileAccess = new FileSystemAccess(repoDir);
+        const gitHubAccess = new GitHubAccess({
+            ...gitHubOptions,
+            branch: 'test-branch',
+            localRepository: {
+                dir: repoDir,
+                fileSystem: fileAccess,
+                executor: new CommandExecutor()
+            }
+        });
+        await gitHubAccess.init();
+        const plyData = new PlyAccess(gitHubAccess, {
+            suiteSource: true,
+            logger: console
+        });
+
+        const plyBase = await plyData.getPlyBase();
+        expect(plyBase).to.be.equal('test');
+
+        const suitePath = 'test/requests/movie-queries.ply.yaml';
+        const requestSuite = await plyData.getRequestSuite(suitePath);
+        assert.ok(requestSuite);
+        expect(requestSuite.name).to.be.equal('requests/movie-queries.ply.yaml');
+        expect(requestSuite.path).to.be.equal(suitePath);
+        expect(requestSuite.requests.length).to.be.equal(5);
+        expect(await gitHubAccess.getCurrentBranch(repoDir)).to.be.equal('test-branch');
+    });
+
     /**
      * must have been cloned already (see above)
      */
     it('loads ply flows from dir', async () => {
         const fileAccess = new FileSystemAccess('.git-repos/ply-demo');
-        const plyData = new PlyAccess(fileAccess, {
-            dir: '.git-repos/ply-demo',
-            logger: console
-        });
+        const plyData = new PlyAccess(fileAccess);
 
         const plyBase = await plyData.getPlyBase();
         expect(plyBase).to.be.equal('test');
@@ -110,6 +139,7 @@ describe('ply', () => {
         const fileAccess = new FileSystemAccess('.git-repos/ply-demo');
         const gitHubAccess = new GitHubAccess({
             ...gitHubOptions,
+            branch: 'main', // no init so branch must be specified
             localRepository: {
                 dir: '.git-repos/ply-demo',
                 fileSystem: fileAccess,
@@ -167,7 +197,6 @@ describe('ply', () => {
     it('loads values from dir', async () => {
         const fileAccess = new FileSystemAccess('.git-repos/ply-demo');
         const plyData = new PlyAccess(fileAccess, {
-            dir: '.git-repos/ply-demo',
             logger: console
         });
 
@@ -189,10 +218,7 @@ describe('ply', () => {
      */
     it('loads flow values', async () => {
         const fileAccess = new FileSystemAccess('.git-repos/ply-demo');
-        const plyData = new PlyAccess(fileAccess, {
-            dir: '.git-repos/ply-demo',
-            logger: console
-        });
+        const plyData = new PlyAccess(fileAccess);
 
         const flow = await plyData.getPlyFlow('test/flows/get-movies.ply.flow');
         assert.ok(flow);
@@ -203,9 +229,7 @@ describe('ply', () => {
 
     it('loads standard descriptors with runtime', async () => {
         const fileAccess = new FileSystemAccess('.');
-        const plyData = new PlyAccess(fileAccess, {
-            logger: console
-        });
+        const plyData = new PlyAccess(fileAccess);
         const options: DescriptorLoadOptions = {
             path: 'templates/descriptors.yaml',
             inlineSvg: true,
@@ -241,7 +265,7 @@ describe('ply', () => {
     });
 
     it('loads custom descriptors', async () => {
-        const gitHubAccess = new GitHubAccess(gitHubOptions);
+        const gitHubAccess = new GitHubAccess({ ...gitHubOptions, branch: 'main' });
         const plyData = new PlyAccess(gitHubAccess);
         const options: DescriptorLoadOptions = {
             path: 'custom/steps',

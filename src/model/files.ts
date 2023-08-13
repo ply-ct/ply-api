@@ -20,6 +20,10 @@ export interface FileList {
     [path: string]: string;
 }
 
+export interface DirOptions {
+    recursive?: boolean;
+}
+
 /**
  * Handles relative-pathed file access for
  */
@@ -39,4 +43,8 @@ export interface FileAccess {
      * Read file content, or undefined if file does not exist.
      */
     readTextFile(path: string): Promise<string | undefined>;
+
+    createDir(path: string, options?: DirOptions): Promise<void>;
+
+    deleteDir(path: string, options?: DirOptions): Promise<void>;
 }

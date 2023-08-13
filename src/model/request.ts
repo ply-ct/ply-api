@@ -6,6 +6,7 @@ export interface PlyRequest {
     method: string;
     headers: { [key: string]: string };
     body?: string;
+    submitted?: Date;
 }
 
 export interface PlyResponse {
