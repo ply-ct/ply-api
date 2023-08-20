@@ -17,4 +17,5 @@ export * from './data/ply';
 export * from './data/files';
 export * from './data/github';
 export * from './util/json';
+export * from './util/flow';
 export * from './version';
