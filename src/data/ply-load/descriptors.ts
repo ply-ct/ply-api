@@ -99,7 +99,9 @@ export class DescriptorsLoader {
         if (descriptor.type === 'step') {
             if (runtime) {
                 if (Object.keys(this.baseStepInst).length === 0) {
-                    const stepPath = `${base}/step.yaml`;
+                    const stepPath = descriptor.path.endsWith('.ts')
+                        ? `${base}/typescript.yaml`
+                        : `${base}/step.yaml`;
                     const stepStr = await this.files.readTextFile(stepPath);
                     if (stepStr) {
                         this.baseStepInst = loadContent(stepStr, stepPath);
