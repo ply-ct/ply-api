@@ -15,7 +15,7 @@ export interface Step {
      */
     path: string;
     attributes?: { [key: string]: string };
-    type: 'step';
+    type?: 'step';
     links?: Link[];
 }
 
@@ -23,7 +23,7 @@ export interface Link {
     id: string;
     to: string;
     attributes?: { [key: string]: string };
-    type: 'link';
+    type?: 'link';
     event?: 'Finish' | 'Error' | 'Cancel' | 'Delay' | 'Resume';
     result?: string;
 }
@@ -33,7 +33,7 @@ export interface Subflow {
     name: string;
     steps?: Step[];
     attributes?: { [key: string]: string };
-    type: 'subflow';
+    type?: 'subflow';
 }
 
 export type FlowElementStatus =
