@@ -1,6 +1,6 @@
 {
   "name": "@ply-ct/ply-api",
-  "version": "1.3.10",
+  "version": "1.3.11",
   "description": "Ply API",
   "main": "dist/main.js",
   "files": [
