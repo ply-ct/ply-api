@@ -15,7 +15,7 @@ stop:
   icon: shape:stop
 
 subflow:
-  name: Subflow
+  name: Embedded
   type: subflow
   icon: embedded.svg
 
@@ -43,3 +43,14 @@ delay:
   name: Delay
   type: step
   icon: delay.svg
+
+value:
+  name: Set Value
+  type: step
+  icon: value.svg
+
+subflow:
+  name: Subflow
+  type: step
+  icon: subflow.svg
+
