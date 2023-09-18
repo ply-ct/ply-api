@@ -14,7 +14,7 @@ stop:
   type: step
   icon: shape:stop
 
-subflow:
+embedded:
   name: Embedded
   type: subflow
   icon: embedded.svg
@@ -53,4 +53,3 @@ subflow:
   name: Subflow
   type: step
   icon: subflow.svg
-
