@@ -79,3 +79,40 @@ export interface SubflowInstance {
     start?: Date;
     end?: Date;
 }
+
+/**
+ * Flow input value
+ */
+export interface FlowValue {
+    /**
+     * Value name
+     */
+    name: string;
+    /**
+     * Default value
+     */
+    value?: string;
+    required?: boolean;
+    /**
+     * Required expression
+     */
+    requiredIf?: string;
+}
+
+/**
+ * Flow return values
+ */
+export interface FlowReturn {
+    name: string;
+    expression?: string;
+}
+
+/**
+ * Subflow spec for launching from main flow
+ */
+export interface SubflowSpec {
+    stepId: string;
+    subflow?: string;
+    values?: FlowValue[];
+    returns?: FlowReturn[];
+}

@@ -1,1 +1,1 @@
-export const plyApiVersion = '1.3.11';
+export const plyApiVersion = '1.3.12';

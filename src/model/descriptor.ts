@@ -68,15 +68,40 @@ export type WidgetType =
 export interface Widget {
     type: WidgetType;
     attribute?: string;
+    /**
+     * Prop name for instance value
+     */
     instanceProp?: string;
     instanceEdit?: boolean;
+    /**
+     * Label when rendered in Configurator.
+     * No label means span tab width.
+     */
     label?: string;
+    /**
+     * Options for select or list widgets.
+     */
     options?: string[] | ((attribute?: string) => string[]);
+    /**
+     * Sub-widgets for tables.
+     */
     widgets?: Widget[];
     readonly?: boolean;
+    /**
+     * Default value.
+     * Set this for selects so that attribute will be populated with first value.
+     */
     default?: string | ((element: { attributes?: { [key: string]: string } }) => string);
     min?: number;
     max?: number;
+    /**
+     * For select: multiple select
+     * For table: multiple lines (defaults to true)
+     */
     multi?: boolean;
     action?: string;
+    /**
+     * HTML title (only for readonly, non-decorated)
+     */
+    title?: string | ((val?: string) => string | undefined);
 }
