@@ -1,3 +1,4 @@
+import { Values } from '@ply-ct/ply-values';
 import { PlyRequest, PlyResponse } from './request';
 
 export interface ExpectedResults {
@@ -22,6 +23,7 @@ export interface ApiExpectedResults {
 }
 
 export type ResultStatus = 'Pending' | 'Running' | 'Passed' | 'Failed' | 'Errored' | 'Submitted';
+export type ResultData = string | { [key: string]: any } | any[];
 
 export interface Outcome {
     name?: string;
@@ -43,7 +45,7 @@ export interface Outcome {
     start?: number;
     end?: number;
 
-    data?: any;
+    data?: ResultData;
 }
 
 /**
@@ -93,4 +95,6 @@ export interface TestRun {
     result: RunResult;
     request?: PlyRequest;
     response?: PlyResponse;
+    data?: ResultData;
+    values?: Values;
 }
