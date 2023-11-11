@@ -15,7 +15,7 @@ export interface Step {
      */
     path: string;
     attributes?: { [key: string]: string };
-    type?: 'step';
+    type: 'step';
     links?: Link[];
 }
 
