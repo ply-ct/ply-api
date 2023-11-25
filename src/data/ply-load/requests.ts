@@ -26,10 +26,7 @@ export class RequestLoader {
         return requestSuites;
     }
 
-    public async loadRequestSuite(
-        plyBase: string,
-        path: string
-    ): Promise<RequestSuite | undefined> {
+    async loadRequestSuite(plyBase: string, path: string): Promise<RequestSuite | undefined> {
         const contents = await this.files.readTextFile(path);
         if (contents !== undefined) {
             return this.readRequestSuite(plyBase, path, contents);

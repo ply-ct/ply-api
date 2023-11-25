@@ -1,4 +1,50 @@
-import { Flow, FlowReturn, FlowValue, Step, SubflowSpec } from '../model/flow';
+import { Flow, FlowReturn, FlowValue, Step, Subflow, SubflowSpec } from '../model/flow';
+
+export const sortSubflowsAndSteps = (flow: Flow) => {
+    flow.subflows?.sort((sub1, sub2) => {
+        if (sub1.attributes?.when === 'Before' && sub2.attributes?.when !== 'Before') {
+            return -1;
+        } else if (sub2.attributes?.when === 'Before' && sub1.attributes?.when !== 'Before') {
+            return 1;
+        }
+        if (sub1.attributes?.when === 'After' && sub2.attributes?.when !== 'After') {
+            return 1;
+        } else if (sub2.attributes?.when === 'After' && sub1.attributes?.when !== 'After') {
+            return -1;
+        }
+        return sub1.id.localeCompare(sub2.id);
+    });
+
+    const addSteps = (flow: Flow | Subflow, start: Step, steps: Step[]) => {
+        if (flow.steps && !steps.find((step) => step.id === start.id)) {
+            steps.push(start);
+            if (start.links) {
+                for (const link of start.links) {
+                    const outStep = flow.steps.find((step) => step.id === link.to);
+                    if (outStep) {
+                        addSteps(flow, outStep, steps);
+                    }
+                }
+            }
+        }
+    };
+
+    const flowStart = flow.steps.find((step) => step.path === 'start');
+    if (flowStart) {
+        const steps: Step[] = [];
+        addSteps(flow, flowStart, steps);
+        flow.steps = steps;
+    }
+
+    flow.subflows?.forEach((subflow) => {
+        const subStart = subflow.steps?.find((step) => step.path === 'start');
+        if (subStart) {
+            const steps: Step[] = [];
+            addSteps(subflow, subStart, steps);
+            subflow.steps = steps;
+        }
+    });
+};
 
 export const getStepForFragment = (flow: Flow, fragment: string): Step | undefined => {
     const dot = fragment.indexOf('.');

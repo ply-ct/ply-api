@@ -1,6 +1,6 @@
 import { Flow } from './flow';
 import { PlyRequest } from './request';
-import { ActualResults, ExpectedResults } from './result';
+import { ActualResults, ExpectedResults, ResultStatus } from './result';
 
 export type TestType = 'request' | 'flow';
 
@@ -24,6 +24,61 @@ export interface TestSuites {
     flows: Flow[];
 }
 
+/**
+ * Can be either .ply.yaml, .ply.yml, or (with exactly one request) .ply
+ */
 export interface RequestSuite extends Suite {
     requests: PlyRequest[];
+}
+
+export interface PlyTest {
+    /**
+     * flow: stepId (subflows flattened), case/request: name
+     */
+    id: string;
+    /**
+     * request, step or case name
+     */
+    name: string;
+    /**
+     * flow steps only
+     */
+    path?: string;
+    /**
+     * request/case only
+     */
+    __start?: number;
+    /**
+     * request/case only
+     */
+    __end?: number;
+    /**
+     * populated by client?
+     */
+    status?: ResultStatus;
+}
+
+// TODO: resultPaths?
+export interface TestFile {
+    /**
+     * relative to plyBase
+     */
+    path: string;
+    type: 'request' | 'flow' | 'case';
+    tests: PlyTest[];
+    /**
+     * populated by client?
+     */
+    status?: ResultStatus;
+}
+
+export interface TestFiles {
+    ply: {
+        base: string;
+    };
+    files: TestFile[];
+    errors?: {
+        file: string;
+        message: string;
+    }[];
 }

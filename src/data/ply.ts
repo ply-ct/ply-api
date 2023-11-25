@@ -3,7 +3,7 @@ import { PlyDataOptions } from '../model/data';
 import { PlyOptions } from '../model/options';
 import { FileAccess } from '../model/files';
 import { Logger } from '../model/log';
-import { RequestSuite, TestSuites } from '../model/test';
+import { RequestSuite, TestSuites, TestFiles } from '../model/test';
 import { Flow } from '../model/flow';
 import { ExpectedResults, ApiExpectedResult, ActualResults } from '../model/result';
 import { OptionsLoader } from './ply-load/options';
@@ -18,6 +18,7 @@ import {
     standardDescriptorDefaults
 } from '../model/descriptor';
 import { DescriptorsLoader } from './ply-load/descriptors';
+import { TestFileLoader } from './ply-load/tests';
 
 export class PlyAccess {
     readonly options: PlyDataOptions;
@@ -97,6 +98,15 @@ export class PlyAccess {
             this.plyFlows = await loader.loadPlyFlows(await this.getPlyBase());
         }
         return this.plyFlows;
+    }
+
+    private testFiles?: TestFiles;
+    public async getTestFiles(): Promise<TestFiles> {
+        if (!this.testFiles) {
+            const loader = new TestFileLoader(this.files, this.options);
+            this.testFiles = await loader.loadTestFiles(await this.getPlyBase());
+        }
+        return this.testFiles;
     }
 
     public async getExpectedResults(path: string): Promise<ExpectedResults | undefined> {
