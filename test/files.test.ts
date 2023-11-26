@@ -56,7 +56,7 @@ describe('files', () => {
             (tf) => tf.path === 'requests/movies-api.ply.yaml'
         );
         assert.ok(reqSuiteFile);
-        expect(reqSuiteFile.type).to.be.equals('request');
+        expect(reqSuiteFile.type).to.be.equals('request-suite');
         expect(reqSuiteFile.tests.length).to.be.equal(5);
         expect(reqSuiteFile.tests[1].id).to.be.equal('updateMovie');
         expect(reqSuiteFile.tests[1].name).to.be.equal('updateMovie');

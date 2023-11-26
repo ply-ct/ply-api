@@ -53,7 +53,7 @@ export class TestFileLoader {
         }
         return {
             path: plyBase === '.' ? file : file.substring(plyBase.length + 1),
-            type: 'request',
+            type: file.endsWith('.ply') ? 'request' : 'request-suite',
             tests: Object.keys(requestsObj).map((name) => {
                 const req = requestsObj[name];
                 return {

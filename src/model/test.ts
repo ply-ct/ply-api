@@ -58,13 +58,14 @@ export interface PlyTest {
     status?: ResultStatus;
 }
 
+export type TestFileType = 'request' | 'request-suite' | 'flow' | 'case-suite';
 // TODO: resultPaths?
 export interface TestFile {
     /**
      * relative to plyBase
      */
     path: string;
-    type: 'request' | 'flow' | 'case';
+    type: TestFileType;
     tests: PlyTest[];
     /**
      * populated by client?
