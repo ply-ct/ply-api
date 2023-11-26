@@ -50,7 +50,7 @@ describe('files', () => {
         expect(flowFile.type).to.be.equals('flow');
         expect(flowFile.tests.length).to.be.equal(10);
         expect(flowFile.tests[1].id).to.be.equal('f1-s5');
-        expect(flowFile.tests[1].name).to.be.equal('name: 'Before All → Delete Movie');
+        expect(flowFile.tests[1].name).to.be.equal('Before All → Delete Movie');
 
         const reqSuiteFile = testFiles.files.find(
             (tf) => tf.path === 'requests/movies-api.ply.yaml'
