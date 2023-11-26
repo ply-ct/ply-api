@@ -91,7 +91,7 @@ export class TestFileLoader {
                 ...(befSub.steps || []).map((step) => {
                     return {
                         id: `${befSub.id}-${step.id}`,
-                        name: step.name,
+                        name: `${befSub.name} → ${step.name}`,
                         path: step.path
                     };
                 })
@@ -112,7 +112,7 @@ export class TestFileLoader {
                 ...(aftSub.steps || []).map((step) => {
                     return {
                         id: `${aftSub.id}-${step.id}`,
-                        name: step.name,
+                        name: `${aftSub.name} → ${step.name}`,
                         path: step.path
                     };
                 })

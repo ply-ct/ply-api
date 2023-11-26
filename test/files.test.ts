@@ -5,6 +5,7 @@ import { GitHubAccess } from '../src/data/github';
 import { GitHubOptions } from '../src/model/github';
 import { CommandExecutor } from '../src/util/exec';
 import { PlyAccess } from '../src/data/ply';
+// import { promises as fs } from 'fs';
 
 describe('files', () => {
     const gitHubOptions: GitHubOptions = {
@@ -38,6 +39,9 @@ describe('files', () => {
         });
 
         const testFiles = await plyData.getTestFiles();
+        // await fs.writeFile('notes/test-files-a.json', JSON.stringify(testFiles, null, 2), {
+        //     encoding: 'utf-8'
+        // });
 
         expect(testFiles.ply.base).to.be.equal('test');
 
@@ -46,7 +50,7 @@ describe('files', () => {
         expect(flowFile.type).to.be.equals('flow');
         expect(flowFile.tests.length).to.be.equal(10);
         expect(flowFile.tests[1].id).to.be.equal('f1-s5');
-        expect(flowFile.tests[1].name).to.be.equal('Delete Movie');
+        expect(flowFile.tests[1].name).to.be.equal('name: 'Before All → Delete Movie');
 
         const reqSuiteFile = testFiles.files.find(
             (tf) => tf.path === 'requests/movies-api.ply.yaml'
