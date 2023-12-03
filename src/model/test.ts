@@ -83,3 +83,36 @@ export interface TestFiles {
         message: string;
     }[];
 }
+
+export interface TestFolder {
+    path: string;
+    folders?: TestFolder[];
+    files?: TestFile[];
+}
+
+export interface TestTree {
+    ply: {
+        base: string;
+    };
+    root: TestFolder;
+    errors?: {
+        file: string;
+        message: string;
+    }[];
+}
+
+export const plyExtensions = ['.ply', '.ply.yaml', '.ply.yml', '.ply.flow'];
+export const isFilePath = (path: string): boolean => {
+    for (const ext of plyExtensions) {
+        if (path.endsWith(ext)) return true;
+    }
+    return false;
+};
+
+type TestItem = TestFile | TestFolder;
+export const isFile = (fileOrFolder: TestItem): fileOrFolder is TestFile => {
+    return (fileOrFolder as TestFile).tests !== undefined;
+};
+export const isFolder = (fileOrFolder: TestItem): fileOrFolder is TestFolder => {
+    return !isFile(fileOrFolder);
+};

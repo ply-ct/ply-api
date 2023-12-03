@@ -3,7 +3,7 @@ import { PlyDataOptions } from '../model/data';
 import { PlyOptions } from '../model/options';
 import { FileAccess } from '../model/files';
 import { Logger } from '../model/log';
-import { RequestSuite, TestSuites, TestFiles } from '../model/test';
+import { RequestSuite, TestSuites, TestFiles, TestFolder, TestTree } from '../model/test';
 import { Flow } from '../model/flow';
 import { ExpectedResults, ApiExpectedResult, ActualResults } from '../model/result';
 import { OptionsLoader } from './ply-load/options';
@@ -19,6 +19,7 @@ import {
 } from '../model/descriptor';
 import { DescriptorsLoader } from './ply-load/descriptors';
 import { TestFileLoader } from './ply-load/tests';
+import { FlatTree } from '../util/tree';
 
 export class PlyAccess {
     readonly options: PlyDataOptions;
@@ -66,6 +67,14 @@ export class PlyAccess {
         };
     }
 
+    public async getPlySuite(relPath: string): Promise<RequestSuite | Flow | undefined> {
+        if (relPath.endsWith('.ply.flow')) {
+            return await this.getPlyFlow(relPath);
+        } else {
+            return await this.getRequestSuite(relPath);
+        }
+    }
+
     /**
      * @param relPath must be relative
      */
@@ -107,6 +116,18 @@ export class PlyAccess {
             this.testFiles = await loader.loadTestFiles(await this.getPlyBase());
         }
         return this.testFiles;
+    }
+
+    /**
+     * @returns flattened tree of ply test folders/files
+     */
+    public async getTestTree(): Promise<TestTree> {
+        const testFiles = await this.getTestFiles();
+        return {
+            ply: testFiles.ply,
+            root: new FlatTree(testFiles.files).root,
+            errors: testFiles.errors
+        };
     }
 
     public async getExpectedResults(path: string): Promise<ExpectedResults | undefined> {
