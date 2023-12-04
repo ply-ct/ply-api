@@ -16,6 +16,10 @@ export interface PlyDataOptions {
      */
     plyBase?: string;
     /**
+     * Remove newlines in step/subflow/request names
+     */
+    collapseNames?: boolean;
+    /**
      * Include suite source
      */
     suiteSource?: boolean;

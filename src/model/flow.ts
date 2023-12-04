@@ -1,3 +1,4 @@
+import { PlyDataOptions } from './data';
 import { Suite } from './test';
 
 export interface Flow extends Suite {

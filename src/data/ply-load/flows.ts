@@ -1,7 +1,7 @@
 import { PlyDataOptions } from '../../model/data';
 import { FileAccess } from '../../model/files';
 import * as yaml from '../../util/yaml';
-import { Flow, Step, Subflow } from '../../model/flow';
+import { Flow, Subflow } from '../../model/flow';
 import { sortSubflowsAndSteps } from '../../util/flow';
 
 /**
@@ -41,7 +41,9 @@ export class FlowLoader {
         if (!flow) {
             throw new Error(`Bad ply flow: ${plyBase}/${relPath}`);
         }
-        flow.steps?.forEach((step) => (step.name = step.name.replace(/\r?\n/g, ' ')));
+        if (this.options.collapseNames) {
+            flow.steps?.forEach((step) => (step.name = step.name.replace(/\r?\n/g, ' ')));
+        }
         const plyFlow: Flow = {
             name: relPath === '.' ? relPath : relPath.substring(plyBase.length + 1),
             path: relPath,
@@ -51,8 +53,10 @@ export class FlowLoader {
         if (flow.subflows) {
             const subflows: Subflow[] = flow.subflows;
             subflows.forEach((subflow) => {
-                subflow.name = subflow.name.replace(/\r?\n/g, ' ');
-                subflow.steps?.forEach((s) => (s.name = s.name.replace(/\r?\n/g, ' ')));
+                if (this.options.collapseNames) {
+                    subflow.name = subflow.name.replace(/\r?\n/g, ' ');
+                    subflow.steps?.forEach((s) => (s.name = s.name.replace(/\r?\n/g, ' ')));
+                }
             });
             plyFlow.subflows = subflows;
         }

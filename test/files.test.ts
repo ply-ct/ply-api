@@ -5,7 +5,7 @@ import { GitHubAccess } from '../src/data/github';
 import { GitHubOptions } from '../src/model/github';
 import { CommandExecutor } from '../src/util/exec';
 import { PlyAccess } from '../src/data/ply';
-import { promises as fs } from 'fs';
+// import { promises as fs } from 'fs';
 
 describe('files', () => {
     const gitHubOptions: GitHubOptions = {
@@ -39,10 +39,6 @@ describe('files', () => {
         });
 
         const testFiles = await plyData.getTestFiles();
-        // await fs.writeFile('notes/test-files-a.json', JSON.stringify(testFiles, null, 2), {
-        //     encoding: 'utf-8'
-        // });
-
         expect(testFiles.ply.base).to.be.equal('test');
 
         const flowFile = testFiles.files.find((tf) => tf.path === 'flows/movies-api.ply.flow');
