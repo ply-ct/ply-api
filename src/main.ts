@@ -3,6 +3,7 @@ export * from './version';
 export * from './model/data';
 export * from './model/descriptor';
 export * from './model/disposable';
+export * from './model/environment';
 export * from './model/event';
 export * from './model/files';
 export * from './model/flow';
