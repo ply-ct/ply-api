@@ -1,0 +1,14 @@
+Connection:
+  widgets:
+    - type: text
+      attribute: url
+      label: URL
+    - type: number
+      attribute: timeout
+      label: Timeout (ms)
+      default: 5000
+Request:
+  widgets:
+    - type: textarea
+      attribute: request
+      label: Request message

@@ -53,3 +53,8 @@ subflow:
   name: Subflow
   type: step
   icon: subflow.svg
+
+websocket:
+  name: WebSocket
+  type: step
+  icon: websocket.svg
