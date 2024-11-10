@@ -1,4 +1,4 @@
-Connection:
+Request:
   widgets:
     - type: text
       attribute: url
@@ -7,8 +7,18 @@ Connection:
       attribute: timeout
       label: Timeout (ms)
       default: 5000
-Request:
+Headers:
+  widgets:
+    - type: table
+      multi: false
+      attribute: headers
+      widgets:
+        - type: text
+          label: Name
+        - type: text
+          label: Value
+Message:
   widgets:
     - type: textarea
-      attribute: request
-      label: Request message
+      attribute: message
+      label: Optional message text, object or expression
