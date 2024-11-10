@@ -44,6 +44,11 @@ delay:
   type: step
   icon: delay.svg
 
+log:
+  name: Log
+  type: step
+  icon: log.svg
+
 value:
   name: Set Value
   type: step
@@ -51,5 +56,14 @@ value:
 
 subflow:
   name: Subflow
-  type: step
   icon: subflow.svg
+
+sync:
+  name: Sync
+  type: step
+  icon: sync.svg
+
+websocket:
+  name: WebSocket
+  type: step
+  icon: websocket.svg
